@@ -1,3 +1,4 @@
+import { requireAuth } from './middleware/requireAuth.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,8 +14,18 @@ import contextEngineRouter from './routes/contextEngine.js';
 import schemeMatcherRouter from './routes/government-scheme-matching-accuracy.js';
 import nbaRouter from './routes/nba.js';
 import businessHealthRouter from './routes/businessHealth.js';
-
-
+import forecastsRouter from './routes/forecasts.js';
+import warningsRouter from './routes/warnings.js';
+import recommendationsRouter from './routes/recommendations.js';
+import decisionsRouter from './routes/decisions.js';
+import memoryRouter from './routes/memory.js';
+import timelineRouter from './routes/timeline.js';
+import graphRouter from './routes/graph.js';
+import fundingRouter from './routes/funding.js';
+import trustRouter from './routes/trust.js';
+import fraudRouter from './routes/fraud.js';
+import goalsRouter from './routes/goals.js';
+import actionsRouter from './routes/actions.js';
 
 const app = express();
 
@@ -24,7 +35,7 @@ app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-business-id', 'x-organization-id', 'x-role-id'],
 }));
 
 // ── Parsing ──────────────────────────────────────
@@ -39,11 +50,21 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/organizations', organizationsRouter);
 app.use('/api/context', contextEngineRouter);
-app.use('/api/schemes/match', schemeMatcherRouter);
-app.use('/api/nba', nbaRouter);
+app.use('/api/schemes/match', requireAuth, schemeMatcherRouter);
+app.use('/api/nba', requireAuth, nbaRouter);
 app.use('/api/health-engine', businessHealthRouter);
-
-
+app.use('/api/forecasts', requireAuth, forecastsRouter);
+app.use('/api/warnings', requireAuth, warningsRouter);
+app.use('/api/recommendations', requireAuth, recommendationsRouter);
+app.use('/api/decisions', requireAuth, decisionsRouter);
+app.use('/api/memory', requireAuth, memoryRouter);
+app.use('/api/timeline', requireAuth, timelineRouter);
+app.use('/api/graph', requireAuth, graphRouter);
+app.use('/api/funding', requireAuth, fundingRouter);
+app.use('/api/trust', requireAuth, trustRouter);
+app.use('/api/fraud', requireAuth, fraudRouter);
+app.use('/api/goals', requireAuth, goalsRouter);
+app.use('/api/actions', requireAuth, actionsRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
@@ -77,7 +98,3 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;
-
-
-
-

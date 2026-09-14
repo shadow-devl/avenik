@@ -61,7 +61,7 @@ model User {
 
   // Phase 2 Relations
   ownedGoals          Goal[]
-  assignedTasks       Task[]
+  assignedActions     Action[]
   uploadedDocuments   Document[]
   targetRelationships EcosystemRelationship[] @relation("UserRelationships")
   trustProfile        TrustProfile?
@@ -195,9 +195,16 @@ model Business {
 
   // Phase 2 Relations
   goals              Goal[]
-  tasks              Task[]
+  actions            Action[]
   recommendations    Recommendation[]
+  decisions          Decision[]
+  timelineEvents     TimelineEvent[]
+  memories           Memory[]
+  fundingRequests    FundingRequest[]
+  verificationClaims VerificationClaim[]
+  fraudCases         FraudCase[]
   healthRecords      BusinessHealth[]
+  earlyWarnings      EarlyWarning[]
   forecasts          Forecast[]
   financialRecords   FinancialRecord[]
   schemeApplications SchemeApplication[]
@@ -257,26 +264,44 @@ model AuditEvent {
 // E. GOAL OPERATING SYSTEM
 // -----------------------------------------
 model Goal {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId  String    @map("business_id") @db.Uuid
-  ownerUserId String    @map("owner_user_id") @db.Uuid
-  title       String
-  description String?
-  category    String // FINANCIAL, PRODUCT, MARKET, COMPLIANCE, SUSTAINABILITY, etc.
-  status      String    @default("DRAFT") // DRAFT, ACTIVE, ON_TRACK, AT_RISK, COMPLETED, ABANDONED
-  confidence  Int? // 0-100
-  targetDate  DateTime? @map("target_date") @db.Timestamptz
-  completedAt DateTime? @map("completed_at") @db.Timestamptz
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId          String    @map("business_id") @db.Uuid
+  ownerUserId         String    @map("owner_user_id") @db.Uuid
+  parentGoalId        String?   @map("parent_goal_id") @db.Uuid
+  title               String
+  description         String?
+  category            String    // FINANCIAL, PRODUCT, MARKET, COMPLIANCE, SUSTAINABILITY, etc.
+  type                String    @default("GOAL") // GOAL, OBJECTIVE, MILESTONE
+  source              String?   // USER, SYSTEM, RECOMMENDATION
+  provenance          String?   // RULE_BASED, CALCULATED, USER_REPORTED
+  status              String    @default("DRAFT") // DRAFT, ACTIVE, ON_TRACK, AT_RISK, COMPLETED, ABANDONED
+  priority            String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  startDate           DateTime? @map("start_date") @db.Timestamptz
+  targetDate          DateTime? @map("target_date") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  baseline            Float?
+  target              Float?
+  currentValue        Float     @default(0) @map("current_value")
+  unit                String?
+  progress            Float     @default(0)
+  confidence          Int?      // 0-100
+  evidenceRequirement String?   @map("evidence_requirement")
+  riskLevel           String    @default("LOW") @map("risk_level") // LOW, MEDIUM, HIGH
+  visibility          String    @default("PRIVATE") // PRIVATE, TEAM, PUBLIC
+  sensitivity         String    @default("NORMAL") // NORMAL, CONFIDENTIAL
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   business  Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
   ownerUser User         @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
-  tasks     Task[]
+  parent    Goal?        @relation("GoalToGoal", fields: [parentGoalId], references: [id], onDelete: Cascade)
+  children  Goal[]       @relation("GoalToGoal")
+  actions   Action[]
   metrics   GoalMetric[]
   risks     Risk[]
 
   @@index([businessId, status])
+  @@index([parentGoalId])
   @@map("goals")
 }
 
@@ -297,28 +322,49 @@ model GoalMetric {
 // -----------------------------------------
 // G. EXECUTION ENGINE (Unified Actions)
 // -----------------------------------------
-model Task {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId     String    @map("business_id") @db.Uuid
-  goalId         String?   @map("goal_id") @db.Uuid
-  assigneeUserId String?   @map("assignee_user_id") @db.Uuid
-  title          String
-  description    String?
-  status         String    @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE, BLOCKED
-  priority       String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  dueDate        DateTime? @map("due_date") @db.Timestamptz
-  completedAt    DateTime? @map("completed_at") @db.Timestamptz
-  source         String? // USER, AI_RECOMMENDATION, APPLICATION, COMPLIANCE
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+model Action {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId          String    @map("business_id") @db.Uuid
+  goalId              String?   @map("goal_id") @db.Uuid
+  assigneeUserId      String?   @map("assignee_user_id") @db.Uuid
+  title               String
+  description         String?
+  type                String    @default("ACTION") // ACTION, CHECKLIST_ITEM
+  status              String    @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE, BLOCKED, CANCELLED
+  priority            String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate             DateTime? @map("due_date") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  source              String?   // USER, AI_RECOMMENDATION, APPLICATION, COMPLIANCE
+  provenance          String?
+  evidenceRequirement String?   @map("evidence_requirement")
+  visibility          String    @default("PRIVATE")
+  executionPlan       String?   @map("execution_plan") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  goal         Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
-  assigneeUser User?    @relation(fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  business     Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  goal         Goal?              @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  assigneeUser User?              @relation(fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  dependencies ActionDependency[] @relation("DependentAction")
+  blocks       ActionDependency[] @relation("BlockingAction")
 
   @@index([businessId, status])
   @@index([assigneeUserId, status])
-  @@map("tasks")
+  @@map("actions")
+}
+
+model ActionDependency {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actionId          String   @map("action_id") @db.Uuid
+  dependsOnActionId String   @map("depends_on_action_id") @db.Uuid
+  type              String   @default("BLOCKS") // BLOCKS, RELATES_TO
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  action          Action @relation("DependentAction", fields: [actionId], references: [id], onDelete: Cascade)
+  dependsOnAction Action @relation("BlockingAction", fields: [dependsOnActionId], references: [id], onDelete: Cascade)
+
+  @@unique([actionId, dependsOnActionId])
+  @@map("action_dependencies")
 }
 
 // -----------------------------------------
@@ -328,17 +374,21 @@ model Recommendation {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   businessId      String    @map("business_id") @db.Uuid
   title           String
-  description     String
+  description     String    @db.Text
   category        String // FINANCE, COMPLIANCE, SALES, GOVERNMENT, LEARNING
   confidenceScore Float     @map("confidence_score") // 0.0 - 1.0
   urgencyScore    Float     @map("urgency_score") // 0.0 - 1.0
-  status          String    @default("ACTIVE") // ACTIVE, DISMISSED, CONVERTED_TO_TASK, EXPIRED
+  relevanceScore  Float?    @map("relevance_score") // 0.0 - 1.0
+  impactScore     Float?    @map("impact_score") // 0.0 - 1.0
+  riskScore       Float?    @map("risk_score") // 0.0 - 1.0
+  status          String    @default("ACTIVE") // ACTIVE, DISMISSED, CONVERTED_TO_TASK, EXPIRED, ACCEPTED, DECLINED, SNOOZED
   explanation     String?   @db.Text
   sourceAiModel   String?   @map("source_ai_model")
   expiresAt       DateTime? @map("expires_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  decisions Decision[]
 
   @@index([businessId, status])
   @@map("recommendations")
@@ -348,13 +398,18 @@ model Recommendation {
 // I. BUSINESS HEALTH & FORECASTING
 // -----------------------------------------
 model BusinessHealth {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId   String   @map("business_id") @db.Uuid
-  dimension    String // OVERALL, FINANCIAL, CUSTOMER, OPERATIONS, COMPLIANCE
-  score        Float // 0.0 - 100.0
-  trend        String // UP, DOWN, STABLE
-  evidence     String?  @db.Text
-  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  dimension       String // OVERALL, FINANCIAL, CUSTOMER, OPERATIONS, COMPLIANCE
+  score           Float // 0.0 - 100.0
+  financialScore  Float?   @map("financial_score")
+  riskScore       Float?   @map("risk_score")
+  operationsScore Float?   @map("operations_score")
+  ecosystemScore  Float?   @map("ecosystem_score")
+  aiInsights      String?  @map("ai_insights") @db.Text
+  trend           String // UP, DOWN, STABLE
+  evidence        String?  @db.Text
+  calculatedAt    DateTime @default(now()) @map("calculated_at") @db.Timestamptz
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -526,4 +581,153 @@ model TrustProfile {
   user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("trust_profiles")
+}
+
+model EarlyWarning {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId   String   @map("business_id") @db.Uuid
+  type         String // FINANCIAL_BURN, COMPLIANCE_RISK, MARKET_SHIFT
+  severity     String // LOW, MEDIUM, HIGH, CRITICAL
+  message      String   @db.Text
+  status       String   @default("ACTIVE") // ACTIVE, RESOLVED, DISMISSED
+  evidence     String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status])
+  @@index([businessId, severity])
+  @@map("early_warnings")
+}
+
+model Decision {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String    @map("business_id") @db.Uuid
+  recommendationId String?   @map("recommendation_id") @db.Uuid
+  title            String
+  description      String    @db.Text
+  status           String    @default("PENDING") // PENDING, DECIDED, EXECUTED
+  selectedOption   String?   @map("selected_option")
+  rationale        String?   @db.Text
+  outcome          String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status])
+  @@map("decisions")
+}
+
+model TimelineEvent {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  eventType        String   @map("event_type") // MILESTONE, FUNDING, WARNING, DECISION, REGISTRATION
+  title            String
+  description      String?  @db.Text
+  occurredAt       DateTime @map("occurred_at") @db.Timestamptz
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, occurredAt])
+  @@map("timeline_events")
+}
+
+model Memory {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  key              String
+  value            Json
+  category         String   // STRATEGIC, FINANCIAL, OPERATIONAL
+  confidence       Float    @default(1.0)
+  sourceId         String?  @map("source_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  source   MemorySource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, key])
+  @@map("memories")
+}
+
+model MemorySource {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type             String   // USER, AI, SYSTEM, DOCUMENT
+  referenceId      String?  @map("reference_id")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  memories         Memory[]
+
+  @@map("memory_sources")
+}
+
+model FundingRequest {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  amount           Float
+  purpose          String   @db.Text
+  status           String   @default("DRAFT") // DRAFT, MATCHING, NEGOTIATING, FUNDED, CLOSED
+  timeline         String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  options          FundingOption[]
+
+  @@index([businessId, status])
+  @@map("funding_requests")
+}
+
+model FundingOption {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fundingRequestId String   @map("funding_request_id") @db.Uuid
+  providerName     String   @map("provider_name")
+  type             String   // GRANT, LOAN, EQUITY, SCHEME
+  amount           Float
+  interestRate     Float?   @map("interest_rate")
+  status           String   @default("AVAILABLE") // AVAILABLE, APPLIED, APPROVED, REJECTED, ACCEPTED
+  matchScore       Float?   @map("match_score")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  request          FundingRequest @relation(fields: [fundingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([fundingRequestId])
+  @@map("funding_options")
+}
+
+model VerificationClaim {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  type             String   // IDENTITY, REVENUE, COMPLIANCE
+  status           String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  data             Json
+  evidenceUrl      String?  @map("evidence_url")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status])
+  @@map("verification_claims")
+}
+
+model FraudCase {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  type             String   // IDENTITY_THEFT, FINANCIAL_FRAUD, POLICY_VIOLATION
+  status           String   @default("OPEN") // OPEN, INVESTIGATING, RESOLVED, CLOSED
+  severity         String   // LOW, MEDIUM, HIGH, CRITICAL
+  details          String   @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status])
+  @@map("fraud_cases")
 }

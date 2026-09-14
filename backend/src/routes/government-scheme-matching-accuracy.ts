@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { success } from '../utils/response.js';
+import { ContextService } from '../services/context.service.js';
 
 const router = Router();
 
@@ -14,13 +15,17 @@ router.post('/match', async (req: Request, res: Response, next: NextFunction) =>
       throw new AppError('Business ID is required', 400);
     }
 
-    const business = await prisma.business.findUnique({
-      where: { id: businessId }
-    });
-
-    if (!business) {
-      throw new AppError('Business not found', 404);
+    // P0: Enforce authorization and tenant isolation
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new AppError('Unauthorized', 401);
     }
+    
+    const context = await ContextService.resolve({ userId, requestedBusinessId: businessId });
+    if (!context.business) {
+      throw new AppError('Business not found or access denied', 403);
+    }
+    const business = context.business;
 
     const activeSchemes = await prisma.governmentScheme.findMany({
       where: { status: 'ACTIVE' }
@@ -38,7 +43,6 @@ router.post('/match', async (req: Request, res: Response, next: NextFunction) =>
       
       const title = scheme.title.toLowerCase();
       
-      // Stand-up India targets women and SC/ST. (Our demo user is a rural woman entrepreneur).
       if (title.includes('stand-up') || title.includes('mudra') || title.includes('employment')) {
         confidence += 0.35; // High confidence match for marginalized rural entrepreneur
       }
@@ -80,6 +84,18 @@ router.post('/match', async (req: Request, res: Response, next: NextFunction) =>
 router.get('/matches/:businessId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { businessId } = req.params;
+    
+    // P0: Enforce authorization
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new AppError('Unauthorized', 401);
+    }
+    
+    const context = await ContextService.resolve({ userId, requestedBusinessId: businessId });
+    if (!context.business) {
+      throw new AppError('Business not found or access denied', 403);
+    }
+
     const matches = await prisma.schemeApplication.findMany({
       where: { businessId: businessId as string },
       include: { scheme: true }

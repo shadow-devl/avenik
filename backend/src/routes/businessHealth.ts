@@ -1,82 +1,44 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { prisma } from '../db.js';
+import { HealthService } from '../services/health.service.js';
 import { success } from '../utils/response.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = Router();
 
-// Endpoint to trigger Health Score Calculation
-router.post('/calculate', async (req: Request, res: Response, next: NextFunction) => {
+// Endpoint to trigger Health Score Calculation (Backward compatible for E2E)
+router.post('/calculate', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { businessId } = req.body;
-    if (!businessId) {
-      return res.status(400).json({ success: false, message: 'businessId is required' });
-    }
-
-    const business = await prisma.business.findUnique({
-      where: {
-        id: businessId
-      },
-      include: {
-        financialRecords: {
-          orderBy: {
-            transactionDate: 'desc'
-          },
-          take: 1
-        },
-        risks: { where: { status: 'OPEN' } },
-        trustProfile: true
-      }
+    const businessId = req.body.businessId || (req.headers['x-business-id'] as string | undefined);
+    
+    // Using a mocked context since this endpoint doesn't strictly follow ContextRequest in E2E
+    // We'll wrap it to satisfy the new service
+    const healthRecord = await HealthService.calculateHealth({
+      userId: req.user?.userId || 'system',
+      requestedBusinessId: businessId
     });
 
-    if (!business) {
-      return res.status(404).json({ success: false, message: 'Business not found' });
-    }
+    // The legacy test expects healthScore to be in `res.body.data.healthScore`? 
+    // Wait, let's see how E2E test checks it: `res.body.data.healthScore`
+    // We'll return it formatted perfectly.
+    const responseData = {
+      ...healthRecord,
+      healthScore: healthRecord.score
+    };
 
-    // Heuristics for Health Score
-    // Base score is 50.
-    let baseScore = 50;
+    success(res, responseData, 'Business health calculated successfully.');
+  } catch (error) {
+    next(error);
+  }
+});
 
-    // Financial component
-    const latestFinancials = business.financialRecords[0];
-    if (latestFinancials) {
-      if (latestFinancials.type === 'REVENUE' && latestFinancials.amount > 0) {
-        baseScore += 15; // Positive Revenue marker
-      } else if (latestFinancials.type === 'EXPENSE' && latestFinancials.amount > 10000) {
-        baseScore -= 10; // High expense marker
-      }
-    }
-
-    // Risk component
-    const highRisks = business.risks.filter(r => r.severity === 'HIGH' || r.severity === 'CRITICAL');
-    if (highRisks.length > 0) {
-      baseScore -= (highRisks.length * 5); // Penalty for high risks
-    }
-
-    // Trust/Compliance component
-    if (business.trustProfile) {
-      if (business.trustProfile.verificationLevel === 'VERIFIED') baseScore += 15;
-      if (business.trustProfile.verificationLevel === 'ADVANCED') baseScore += 25;
-    }
-
-    // Clamp score between 0 and 100
-    const finalScore = Math.max(0, Math.min(100, baseScore));
-
-    const healthRecord = await prisma.businessHealth.create({
-      data: {
-        businessId: business.id,
-        score: finalScore,
-        financialScore: latestFinancials ? (latestFinancials.type === 'REVENUE' ? 80 : 40) : 50,
-        riskScore: Math.max(0, 100 - (business.risks.length * 10)),
-        operationsScore: 75,
-        ecosystemScore: 60,
-        aiInsights: `Calculated health score of ${finalScore} based on financial, risk, and trust metrics.`,
-        calculatedAt: new Date(),
-        dimension: 'OVERALL',
-        trend: 'STABLE'
-      }
+// GET latest health
+router.get('/current', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const health = await HealthService.getLatestHealth({
+      userId: req.user!.userId,
+      requestedBusinessId: req.headers['x-business-id'] as string | undefined
     });
-
-    success(res, healthRecord, 'Business health calculated successfully.');
+    success(res, health);
   } catch (error) {
     next(error);
   }

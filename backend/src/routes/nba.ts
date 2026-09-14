@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../db.js';
 import { success } from '../utils/response.js';
+import { ContextService } from '../services/context.service.js';
 
 const router = Router();
 
@@ -12,6 +13,17 @@ router.post('/generate', async (req: Request, res: Response, next: NextFunction)
       return res.status(400).json({ success: false, message: 'businessId is required' });
     }
 
+    // P0: Enforce authorization and tenant isolation
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    
+    const context = await ContextService.resolve({ userId, requestedBusinessId: businessId });
+    if (!context.business) {
+      return res.status(403).json({ success: false, message: 'Business not found or access denied' });
+    }
+    
     const business = await prisma.business.findUnique({
       where: { id: businessId },
       include: {

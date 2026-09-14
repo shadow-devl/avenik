@@ -1,83 +1,119 @@
-# AVENIK
-### India's Comprehensive Startup Ecosystem Platform
+<div align="center">
+  <img src="https://raw.githubusercontent.com/shadow-devl/avenik/main/frontend/public/logo.png" alt="Avenik Logo" width="200" onerror="this.style.display='none'"/>
+  <h1>🚀 AVENIK</h1>
+  <p><b>India's Comprehensive AI-Driven Startup Ecosystem Platform</b></p>
+  <p><i>Smart India Hackathon (SIH26092) — AI-Driven Scheme Matching for Marginalized Entrepreneurs</i></p>
+  
+  [![Phase](https://img.shields.io/badge/Phase-10.9%20Production%20Ready-brightgreen.svg)]()
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)]()
+  [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)]()
+  [![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)]()
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)]()
+</div>
 
-> Build. Grow. Succeed. — Connecting entrepreneurs, investors, mentors, and government schemes on a single trust-first platform.
+<br />
 
-## Tech Stack
+> 🌍 **Access Avenik Globally:**  
+> To view the live platform, click here: **[🔗 Open Avenik Platform (Live Demo)](https://avenik-sih.vercel.app)** *(Replace with your actual deployment URL like Vercel/Render)*
+>
+> ⚡ *Running locally and want to share instantly?* Run `npx localtunnel --port 3000` and share the generated link!
+
+---
+
+## 📖 Overview
+
+**Avenik** is a unified entrepreneurial operating, intelligence, funding, and government-support ecosystem. Built specifically for the **Smart India Hackathon (SIH26092)**, Avenik eliminates the complexity of discovering government schemes by offering a highly secure, AI-driven, and marginalized-entrepreneur-first matching engine.
+
+### ✨ Key Features
+- 🧠 **Entrepreneur Intelligence Core:** Adaptive, minimal-question engine to extract candidate intent without exhausting the user.
+- 🎯 **Government Scheme Matching:** Hard eligibility verification combined with soft relevance scoring (separating AI heuristics from authoritative truth).
+- 🛡️ **Zero-Trust & Provenance:** Robust RBAC and tenant isolation via a canonical `ContextService`. You only see what you own.
+- 📊 **Financial & Health Engine:** Deterministic calculation of business health, EMI, and runway.
+- 📱 **Unified UX Dashboard:** Actionable "Next-Best-Actions" (NBA) and trajectory tracking in a clean, responsive UI.
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15 · TypeScript · Tailwind CSS |
-| Backend | Express.js · TypeScript · Prisma ORM |
-| Database | PostgreSQL (Neon) |
-| Auth | Auth.js (NextAuth v5) |
-| Validation | Zod |
+| **Frontend** | ⚛️ Next.js 15 (App Router) · 🟦 TypeScript · 🎨 Tailwind CSS |
+| **Backend** | 🟢 Express.js · 🟦 TypeScript · 🗄️ Prisma ORM |
+| **Database** | 🐘 PostgreSQL (Neon Serverless) |
+| **Auth** | 🔐 Auth.js (NextAuth v5) / JWT Middleware |
+| **Validation** | 🛡️ Zod |
 
-## Quick Start
+---
 
-### Prerequisites
+## 🚀 Quick Start
+
+### 📋 Prerequisites
 - Node.js ≥ 18
 - npm ≥ 9
-- PostgreSQL (or Neon account)
+- PostgreSQL (or a Neon database URL)
 
-### Setup
+### 💻 Local Setup
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url> && cd AVENIK
+git clone https://github.com/shadow-devl/avenik.git
+cd avenik
 
 # 2. Set up environment variables
 cp .env.example .env
-# Edit .env with your database URL, auth secrets, etc.
+# Edit .env with your DATABASE_URL, JWT_SECRET, etc.
 
-# 3. Install frontend
+# 3. Install dependencies
 cd frontend && npm install && cd ..
-
-# 4. Install backend
 cd backend && npm install && cd ..
 
-# 5. Run database migrations
-cd backend && npx prisma migrate dev && cd ..
+# 4. Run database migrations & Seed Demo Data
+cd backend 
+npx prisma migrate dev
+npx tsx prisma/seed_sih.ts 
+cd ..
 
-# 6. Start development
-# Terminal 1 — Frontend
+# 5. Start development servers
+# Terminal 1 — Frontend (Runs on port 3000)
 cd frontend && npm run dev
 
-# Terminal 2 — Backend
+# Terminal 2 — Backend (Runs on port 4000)
 cd backend && npm run dev
 ```
 
-## Project Structure
+---
 
-```
+## 📁 Project Structure
+
+```text
 AVENIK/
-├── frontend/         # Next.js 15 App (UI + SSR)
-├── backend/          # Express.js API Server
-├── api/              # Shared TypeScript types & schemas
-├── database/         # SQL migrations & seeds
-├── docs/             # Architecture documentation
-└── scripts/          # Utility scripts
+├── frontend/         # Next.js 15 App (UI + SSR + Dashboards)
+├── backend/          # Express.js API Server (Business Logic + AI Orchestration)
+├── api/              # Shared TypeScript types & validation schemas
+└── backend/prisma/   # SQL migrations, Canonical Schema, and SIH seeds
 ```
 
-## Phase Status
+---
+
+## 🏆 Development Roadmap & Status
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Foundation | 🔨 In Progress |
-| 1.1 | Secure Authentication | ⏳ Pending |
-| 1.2 | Identity + Roles + Authorization | ⏳ Pending |
-| 1.3 | Privacy + Audit + Security | ⏳ Pending |
-| 1.4 | Verification + Trust | ⏳ Pending |
-| 1.5 | Government Schemes | ⏳ Pending |
-| 1.6 | Financial Intelligence | ⏳ Pending |
-| 1.7 | Business OS + CRM | ⏳ Pending |
-| 1.8 | HR + Workforce | ⏳ Pending |
-| 1.9 | Investor Ecosystem | ⏳ Pending |
-| 1.10 | Mentor + Advisor | ⏳ Pending |
-| 1.11 | Incubator + Accelerator | ⏳ Pending |
-| 1.12 | Corporate + Partnership | ⏳ Pending |
-| 1.13 | Student + Explorer | ⏳ Pending |
+| **1 - 2** | Foundation, Auth, Trust, Fraud, Graph & Core Database | ✅ Completed |
+| **3 - 9** | Growth Planning, Financial Intelligence, Ecosystem OS | ✅ Completed (Engines Unified) |
+| **10.9** | Global Avenik Integration & Production Gate Audit | ✅ Completed |
 
-## License
+> *Note: Avenik operates on a canonical architecture. Features are driven by unified Context, Recommendation, Decision, and Memory engines rather than sprawling micro-databases.*
 
-MIT
+---
+
+## 🔒 Security & Privacy
+
+Avenik enforces strict **Tenant Isolation**. The internal `ContextService` prevents horizontal privilege escalation. The architecture mandates that AI models **never** bypass database authorization constraints.
+
+---
+
+<div align="center">
+  <b>Built with ❤️ for the Smart India Hackathon 2026</b>
+</div>

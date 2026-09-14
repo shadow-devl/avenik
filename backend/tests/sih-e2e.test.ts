@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../src/server'; // assuming express app export
+import app from '../src/server';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../src/config/index';
 
@@ -12,7 +12,6 @@ describe('SIH Phase 2 E2E Demonstration', () => {
   let authToken: string;
   
   beforeAll(async () => {
-    // Stage R: SIH END-TO-END DEMONSTRATION setup
     const user = await prisma.user.create({
       data: {
         email: 'sih-demo@avenik.com',
@@ -53,12 +52,13 @@ describe('SIH Phase 2 E2E Demonstration', () => {
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toHaveProperty('hasBusiness');
+    expect(res.body.data).toHaveProperty('business');
   }, 15000);
 
   it('4-11. Scheme Matching Engine returns explained results', async () => {
     const res = await request(app)
       .post('/api/schemes/match/match')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ businessId, filters: { industry: 'Tech', marginalizationStatus: true } });
     
     expect(res.status).toBe(200);
@@ -68,6 +68,7 @@ describe('SIH Phase 2 E2E Demonstration', () => {
   it('16-17. NBA Engine triggers correctly for missing data', async () => {
     const res = await request(app)
       .post('/api/nba/generate')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ businessId });
     
     expect(res.status).toBe(200);
@@ -77,6 +78,7 @@ describe('SIH Phase 2 E2E Demonstration', () => {
   it('18-19. Health Engine processes financial & trust signals', async () => {
     const res = await request(app)
       .post('/api/health-engine/calculate')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ businessId });
       
     expect(res.status).toBe(200);
