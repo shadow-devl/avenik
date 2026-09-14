@@ -1,0 +1,529 @@
+// AVENIK Phase 1 Foundation Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+enum ProvenanceType {
+  OFFICIAL_SOURCE
+  VERIFIED
+  CONNECTED_SOURCE
+  PROFESSIONALLY_REVIEWED
+  USER_REPORTED
+  IMPORTED
+  CALCULATED
+  ESTIMATED
+  AI_GENERATED
+  UNVERIFIED
+}
+
+// ── Models ───────────────────────────────────────
+
+model User {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String?    @map("display_name")
+  email         String?    @unique
+  emailVerified DateTime?  @map("email_verified") @db.Timestamptz
+  image         String?    @map("profile_image")
+  countryCode   String?    @map("country_code") @db.Char(2)
+  status        UserStatus @default(PENDING)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  accounts        Account[]
+  sessions        Session[]
+  profile         UserProfile?
+  roles           UserRole[]
+  memberships     OrganizationMember[]
+  ownedBusinesses Business[]
+  auditEvents     AuditEvent[]         @relation("ActorUser")
+
+  // Phase 2 Relations
+  ownedGoals          Goal[]
+  assignedTasks       Task[]
+  uploadedDocuments   Document[]
+  targetRelationships EcosystemRelationship[] @relation("UserRelationships")
+  trustProfile        TrustProfile?
+
+  @@index([email])
+  @@index([countryCode])
+  @@index([status])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime @db.Timestamptz
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.Timestamptz
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model UserProfile {
+  userId       String   @id @map("user_id") @db.Uuid
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
+  bio          String?
+  profileImage String?  @map("profile_image")
+  timezone     String?  @default("Asia/Kolkata")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Role {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Organization {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  countryCode String?            @map("country_code") @db.Char(2)
+  status      OrganizationStatus @default(PENDING)
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  members     OrganizationMember[]
+  businesses  Business[]
+  auditEvents AuditEvent[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  membershipRole String   @map("membership_role")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@map("organization_members")
+}
+
+model Business {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?   @map("organization_id") @db.Uuid
+  ownerUserId    String?   @map("owner_user_id") @db.Uuid
+  legalName      String?   @map("legal_name")
+  displayName    String    @map("display_name")
+  countryCode    String?   @map("country_code") @db.Char(2)
+  businessStatus String?   @map("business_status")
+  foundedAt      DateTime? @map("founded_at") @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  ownerUser    User?         @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  // Phase 2 Relations
+  goals              Goal[]
+  tasks              Task[]
+  recommendations    Recommendation[]
+  healthRecords      BusinessHealth[]
+  forecasts          Forecast[]
+  financialRecords   FinancialRecord[]
+  schemeApplications SchemeApplication[]
+  risks              Risk[]
+  documents          Document[]
+  trustProfile       TrustProfile?
+
+  // Ecosystem Relations
+  sourceRelationships EcosystemRelationship[] @relation("SourceRelationships")
+  targetRelationships EcosystemRelationship[] @relation("TargetRelationships")
+
+  @@index([ownerUserId])
+  @@index([organizationId])
+  @@map("businesses")
+}
+
+model ProvenanceRecord {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provenance      ProvenanceType
+  sourceName      String?        @map("source_name")
+  sourceUrl       String?        @map("source_url")
+  sourceReference String?        @map("source_reference")
+  sourceVersion   String?        @map("source_version")
+  verifiedAt      DateTime?      @map("verified_at") @db.Timestamptz
+  expiresAt       DateTime?      @map("expires_at") @db.Timestamptz
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("provenance_records")
+}
+
+model AuditEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorUserId    String?  @map("actor_user_id") @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  action         String
+  resourceType   String   @map("resource_type")
+  resourceId     String?  @map("resource_id") @db.Uuid
+  purpose        String?
+  result         String
+  ipAddress      String?  @map("ip_address") // Maps to INET in Postgres if we use raw, but String in Prisma is fine for now
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actorUser    User?         @relation("ActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_events")
+}
+
+// Phase 2 Schema Additions
+// Unified Business State, Goals, Actions, Health, Finance, Ecosystem, Government, etc.
+
+// -----------------------------------------
+// E. GOAL OPERATING SYSTEM
+// -----------------------------------------
+model Goal {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String    @map("business_id") @db.Uuid
+  ownerUserId String    @map("owner_user_id") @db.Uuid
+  title       String
+  description String?
+  category    String // FINANCIAL, PRODUCT, MARKET, COMPLIANCE, SUSTAINABILITY, etc.
+  status      String    @default("DRAFT") // DRAFT, ACTIVE, ON_TRACK, AT_RISK, COMPLETED, ABANDONED
+  confidence  Int? // 0-100
+  targetDate  DateTime? @map("target_date") @db.Timestamptz
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business  Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  ownerUser User         @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  tasks     Task[]
+  metrics   GoalMetric[]
+  risks     Risk[]
+
+  @@index([businessId, status])
+  @@map("goals")
+}
+
+model GoalMetric {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  goalId       String   @map("goal_id") @db.Uuid
+  name         String
+  targetValue  Float    @map("target_value")
+  currentValue Float    @default(0) @map("current_value")
+  unit         String?
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@map("goal_metrics")
+}
+
+// -----------------------------------------
+// G. EXECUTION ENGINE (Unified Actions)
+// -----------------------------------------
+model Task {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String    @map("business_id") @db.Uuid
+  goalId         String?   @map("goal_id") @db.Uuid
+  assigneeUserId String?   @map("assignee_user_id") @db.Uuid
+  title          String
+  description    String?
+  status         String    @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE, BLOCKED
+  priority       String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate        DateTime? @map("due_date") @db.Timestamptz
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz
+  source         String? // USER, AI_RECOMMENDATION, APPLICATION, COMPLIANCE
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  goal         Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  assigneeUser User?    @relation(fields: [assigneeUserId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status])
+  @@index([assigneeUserId, status])
+  @@map("tasks")
+}
+
+// -----------------------------------------
+// H. NEXT-BEST-ACTION (Recommendations)
+// -----------------------------------------
+model Recommendation {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String    @map("business_id") @db.Uuid
+  title           String
+  description     String
+  category        String // FINANCE, COMPLIANCE, SALES, GOVERNMENT, LEARNING
+  confidenceScore Float     @map("confidence_score") // 0.0 - 1.0
+  urgencyScore    Float     @map("urgency_score") // 0.0 - 1.0
+  status          String    @default("ACTIVE") // ACTIVE, DISMISSED, CONVERTED_TO_TASK, EXPIRED
+  explanation     String?   @db.Text
+  sourceAiModel   String?   @map("source_ai_model")
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status])
+  @@map("recommendations")
+}
+
+// -----------------------------------------
+// I. BUSINESS HEALTH & FORECASTING
+// -----------------------------------------
+model BusinessHealth {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId   String   @map("business_id") @db.Uuid
+  dimension    String // OVERALL, FINANCIAL, CUSTOMER, OPERATIONS, COMPLIANCE
+  score        Float // 0.0 - 100.0
+  trend        String // UP, DOWN, STABLE
+  evidence     String?  @db.Text
+  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, dimension, calculatedAt(sort: Desc)])
+  @@map("business_health")
+}
+
+model Forecast {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  metricName      String   @map("metric_name") // REVENUE, CASH_FLOW, BURN_RATE
+  periodStart     DateTime @map("period_start") @db.Date
+  periodEnd       DateTime @map("period_end") @db.Date
+  predictedValue  Float    @map("predicted_value")
+  confidenceLower Float?   @map("confidence_lower")
+  confidenceUpper Float?   @map("confidence_upper")
+  assumptions     String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("forecasts")
+}
+
+// -----------------------------------------
+// K. FINANCIAL INTELLIGENCE
+// -----------------------------------------
+model FinancialRecord {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  type            String // INFLOW, OUTFLOW
+  category        String // REVENUE, EXPENSE, DEBT, INVESTMENT
+  amount          Float
+  currency        String   @default("INR") @db.Char(3)
+  transactionDate DateTime @map("transaction_date") @db.Date
+  status          String   @default("COMPLETED") // PENDING, COMPLETED, RECONCILED
+  description     String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, transactionDate])
+  @@map("financial_records")
+}
+
+// -----------------------------------------
+// T. GOVERNMENT SUPPORT EXECUTION
+// -----------------------------------------
+model GovernmentScheme {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String
+  department       String
+  description      String    @db.Text
+  eligibilityRules String    @map("eligibility_rules") @db.Text
+  benefits         String    @db.Text
+  officialUrl      String?   @map("official_url")
+  deadline         DateTime? @db.Timestamptz
+  status           String    @default("ACTIVE") // ACTIVE, EXPIRED, PAUSED
+  lastVerifiedAt   DateTime  @default(now()) @map("last_verified_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  applications SchemeApplication[]
+
+  @@index([status])
+  @@map("government_schemes")
+}
+
+model SchemeApplication {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String    @map("business_id") @db.Uuid
+  schemeId        String    @map("scheme_id") @db.Uuid
+  status          String    @default("DISCOVERED") // DISCOVERED, PREPARING, SUBMITTED, APPROVED, REJECTED
+  matchConfidence Float?    @map("match_confidence") // 0.0 - 1.0 AI matching
+  missingEvidence String?   @map("missing_evidence") @db.Text
+  appliedAt       DateTime? @map("applied_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  scheme   GovernmentScheme @relation(fields: [schemeId], references: [id], onDelete: Restrict)
+
+  @@unique([businessId, schemeId])
+  @@map("scheme_applications")
+}
+
+// -----------------------------------------
+// AE. RISK & RESILIENCE
+// -----------------------------------------
+model Risk {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String   @map("business_id") @db.Uuid
+  goalId         String?  @map("goal_id") @db.Uuid
+  category       String // FINANCIAL, COMPLIANCE, OPERATIONAL, MARKET
+  title          String
+  description    String   @db.Text
+  severity       String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  likelihood     String   @default("POSSIBLE") // UNLIKELY, POSSIBLE, LIKELY, CERTAIN
+  status         String   @default("IDENTIFIED") // IDENTIFIED, MITIGATED, ACCEPTED, REALIZED
+  mitigationPlan String?  @map("mitigation_plan") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  goal     Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, severity])
+  @@map("risks")
+}
+
+// -----------------------------------------
+// V. DOCUMENT INTELLIGENCE
+// -----------------------------------------
+model Document {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String    @map("business_id") @db.Uuid
+  uploaderUserId String    @map("uploader_user_id") @db.Uuid
+  title          String
+  documentType   String    @map("document_type") // INCORPORATION, FINANCIAL, CONTRACT, IDENTITY
+  fileUrl        String    @map("file_url")
+  status         String    @default("ACTIVE") // ACTIVE, ARCHIVED, EXPIRED
+  isVerified     Boolean   @default(false) @map("is_verified")
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  uploaderUser User     @relation(fields: [uploaderUserId], references: [id], onDelete: Restrict)
+
+  @@index([businessId, documentType])
+  @@map("documents")
+}
+
+// -----------------------------------------
+// X. ECOSYSTEM INTELLIGENCE (Relationships)
+// -----------------------------------------
+model EcosystemRelationship {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sourceBusinessId String   @map("source_business_id") @db.Uuid
+  targetBusinessId String?  @map("target_business_id") @db.Uuid
+  targetUserId     String?  @map("target_user_id") @db.Uuid // For mentors/investors not tied to a business
+  relationshipType String   @map("relationship_type") // B2B_SUPPLIER, INVESTOR, MENTOR, PARTNER
+  status           String   @default("PENDING") // PENDING, ACTIVE, REJECTED, TERMINATED
+  healthScore      Float?   @map("health_score") // 0.0 - 100.0
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  sourceBusiness Business  @relation("SourceRelationships", fields: [sourceBusinessId], references: [id], onDelete: Cascade)
+  targetBusiness Business? @relation("TargetRelationships", fields: [targetBusinessId], references: [id], onDelete: Cascade)
+  targetUser     User?     @relation("UserRelationships", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([sourceBusinessId, relationshipType])
+  @@map("ecosystem_relationships")
+}
+
+// -----------------------------------------
+// BL. TRUST & SAFETY 2.0
+// -----------------------------------------
+model TrustProfile {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId        String?   @unique @map("business_id") @db.Uuid
+  userId            String?   @unique @map("user_id") @db.Uuid
+  trustScore        Float     @default(0.0) @map("trust_score")
+  verificationLevel String    @default("UNVERIFIED") @map("verification_level") // UNVERIFIED, BASIC, KYC_VERIFIED, OFFICIAL
+  lastVerifiedAt    DateTime? @map("last_verified_at") @db.Timestamptz
+  fraudFlags        Int       @default(0) @map("fraud_flags")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trust_profiles")
+}
