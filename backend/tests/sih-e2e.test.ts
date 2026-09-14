@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/server'; // assuming express app export
 import { PrismaClient } from '@prisma/client';
+import { config } from '../src/config/index';
 
 const prisma = new PrismaClient();
 
 describe('SIH Phase 2 E2E Demonstration', () => {
   let businessId: string;
+  let authToken: string;
   
   beforeAll(async () => {
     // Stage R: SIH END-TO-END DEMONSTRATION setup
@@ -17,6 +20,8 @@ describe('SIH Phase 2 E2E Demonstration', () => {
       }
     });
 
+    authToken = jwt.sign({ userId: user.id, email: user.email }, config.jwtSecret);
+
     const org = await prisma.organization.create({
       data: {
         name: 'SIH Demo Org',
@@ -25,6 +30,7 @@ describe('SIH Phase 2 E2E Demonstration', () => {
 
     const business = await prisma.business.create({
       data: {
+        ownerUserId: user.id,
         organizationId: org.id,
         displayName: 'Marginalized Entrepreneur Demo',
         countryCode: 'IN'
@@ -42,7 +48,9 @@ describe('SIH Phase 2 E2E Demonstration', () => {
   });
 
   it('1-3. Context Engine returns valid unified state', async () => {
-    const res = await request(app).get(`/api/context/current?businessId=${businessId}`);
+    const res = await request(app)
+      .get(`/api/context/current?businessId=${businessId}`)
+      .set('Authorization', `Bearer ${authToken}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty('hasBusiness');
