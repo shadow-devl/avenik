@@ -16,7 +16,7 @@ router.post('/', requireAuth, async (req, res, next) => {
         countryCode,
         members: {
           create: {
-            userId: req.user!.id,
+            userId: req.user!.userId,
             membershipRole: 'ADMIN'
           }
         }
@@ -41,13 +41,13 @@ router.get('/', requireAuth, async (req, res, next) => {
       where: {
         members: {
           some: {
-            userId: req.user!.id
+            userId: req.user!.userId
           }
         }
       },
       include: {
         members: {
-          where: { userId: req.user!.id },
+          where: { userId: req.user!.userId },
           select: { membershipRole: true }
         }
       }

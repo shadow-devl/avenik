@@ -81,7 +81,7 @@ export class ContextService {
       activeOrganization = {
         id: membership.organizationId,
         name: membership.organization.name,
-        role: membership.role
+        role: membership.membershipRole
       };
     }
 
@@ -136,12 +136,10 @@ export class ContextService {
       await prisma.auditEvent.create({
         data: {
           action: 'CONTEXT_SWITCH',
-          entityType: 'CONTEXT',
-          entityId: 'CONTEXT',
-          resourceType: 'API',
+          resourceType: 'API_CONTEXT',
           actorUserId: user.id,
           organizationId: activeOrganization?.id,
-          details: JSON.stringify({ businessId: activeBusiness?.id, role: activeRole }),
+          result: 'SUCCESS',
           ipAddress: 'internal',
         }
       });
@@ -150,10 +148,10 @@ export class ContextService {
     return {
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email || '',
         status: user.status || 'ACTIVE'
       },
-      activeRole,
+      activeRole: activeRole || 'UNASSIGNED',
       organization: activeOrganization,
       business: activeBusiness,
       journey,

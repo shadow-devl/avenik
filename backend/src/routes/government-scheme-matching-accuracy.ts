@@ -81,7 +81,7 @@ router.get('/matches/:businessId', async (req: Request, res: Response, next: Nex
   try {
     const { businessId } = req.params;
     const matches = await prisma.schemeApplication.findMany({
-      where: { businessId },
+      where: { businessId: businessId as string },
       include: { scheme: true }
     });
     success(res, matches, 'Matches retrieved.');

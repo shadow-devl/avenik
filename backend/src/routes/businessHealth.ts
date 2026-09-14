@@ -39,13 +39,10 @@ router.post('/calculate', async (req: Request, res: Response, next: NextFunction
     // Financial component
     const latestFinancials = business.financialRecords[0];
     if (latestFinancials) {
-      if (latestFinancials.monthlyRevenue > latestFinancials.monthlyExpenses) {
-        baseScore += 15; // Profitable
-      } else {
-        baseScore -= 10; // Loss making
-      }
-      if (latestFinancials.cashReserves > latestFinancials.monthlyExpenses * 3) {
-        baseScore += 10; // Good runway
+      if (latestFinancials.type === 'REVENUE' && latestFinancials.amount > 0) {
+        baseScore += 15; // Positive Revenue marker
+      } else if (latestFinancials.type === 'EXPENSE' && latestFinancials.amount > 10000) {
+        baseScore -= 10; // High expense marker
       }
     }
 
@@ -68,7 +65,7 @@ router.post('/calculate', async (req: Request, res: Response, next: NextFunction
       data: {
         businessId: business.id,
         score: finalScore,
-        financialScore: latestFinancials ? (latestFinancials.monthlyRevenue > latestFinancials.monthlyExpenses ? 80 : 40) : 50,
+        financialScore: latestFinancials ? (latestFinancials.type === 'REVENUE' ? 80 : 40) : 50,
         riskScore: Math.max(0, 100 - (business.risks.length * 10)),
         operationsScore: 75,
         ecosystemScore: 60,
