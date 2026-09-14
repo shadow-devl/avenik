@@ -12,7 +12,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "admin": "tsx src/admin/admin-server.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
