@@ -224,6 +224,8 @@ model Business {
   WorkforceCapacity       WorkforceCapacity[]
   OperationalRisk         OperationalRisk[]
   GrowthScenario          GrowthScenario[]
+  ProactiveInsight        ProactiveInsight[]
+  AgentExecution          AgentExecution[]
 
   @@index([ownerUserId])
   @@index([organizationId])
@@ -571,6 +573,43 @@ model GrowthScenario {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("growth_scenarios")
+}
+
+// -----------------------------------------
+// PHASE 11: ADAPTIVE INTELLIGENCE
+// -----------------------------------------
+model ProactiveInsight {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @map("business_id") @db.Uuid
+  domain      String // FINANCE, WORKFORCE, STRATEGY, ECOSYSTEM, etc.
+  title       String
+  description String
+  severity    String // LOW, MEDIUM, HIGH, CRITICAL
+  urgency     String // LOW, MEDIUM, HIGH, URGENT
+  impactScore Float    @map("impact_score")
+  confidence  Float
+  status      String   @default("UNREAD") // UNREAD, ACKNOWLEDGED, ACTIONED, DISMISSED
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("proactive_insights")
+}
+
+model AgentExecution {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String    @map("business_id") @db.Uuid
+  requestedBy   String    @map("requested_by") @db.Uuid // User ID
+  actionName    String    @map("action_name")
+  autonomyLevel Int       @map("autonomy_level") // 0-6
+  status        String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, EXECUTING, SUCCESS, FAILED, BLOCKED_BY_SAFETY
+  safetyReason  String?   @map("safety_reason")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  executedAt    DateTime? @map("executed_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("agent_executions")
 }
 
 // T. GOVERNMENT SUPPORT EXECUTION
