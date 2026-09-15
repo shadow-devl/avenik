@@ -26,6 +26,7 @@ import trustRouter from './routes/trust.js';
 import fraudRouter from './routes/fraud.js';
 import goalsRouter from './routes/goals.js';
 import actionsRouter from './routes/actions.js';
+import { intelligenceRouter } from './routes/intelligence.js';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/trust', requireAuth, trustRouter);
 app.use('/api/fraud', requireAuth, fraudRouter);
 app.use('/api/goals', requireAuth, goalsRouter);
 app.use('/api/actions', requireAuth, actionsRouter);
+app.use('/api/intelligence', intelligenceRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../src/server.js';
+import app from '../src/server.js';
 import { prisma } from '../src/db.js';
 
 describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
@@ -9,20 +9,18 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
   beforeAll(async () => {
     const business = await prisma.business.create({
       data: {
-        name: 'Phase 11 Test Corp', displayName: 'Phase 11 Test Corp',
-        businessType: 'B2B',
-        industry: 'AI',
+        displayName: 'Phase 11 Test Corp',
         legalName: 'Phase 11 Test Corp Ltd',
         financialRecords: {
           create: [
-            { type: 'INFLOW', amount: 5000, date: new Date(), description: 'Revenue' },
-            { type: 'OUTFLOW', amount: 8000, date: new Date(), description: 'Expenses' }
+            { type: 'INFLOW', amount: 5000, transactionDate: new Date(), description: 'Revenue', category: 'SALES' },
+            { type: 'OUTFLOW', amount: 8000, transactionDate: new Date(), description: 'Expenses', category: 'OPEX' }
           ]
         },
-        workforceCapacities: {
+        WorkforceCapacity: {
           create: [
-            { role: 'Engineering Lead', overloaded: true, estimatedGapHrs: 20 },
-            { role: 'Sales Rep', overloaded: false, estimatedGapHrs: 0 }
+            { roleName: 'Engineering Lead', overloaded: true, currentFTE: 1, requiredFTE: 2 },
+            { roleName: 'Sales Rep', overloaded: false, currentFTE: 2, requiredFTE: 2 }
           ]
         }
       }
@@ -39,7 +37,7 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
       .post(`/api/intelligence/insights/detect?businessId=${businessId}`)
       .send();
     
-    expect(res.status).toBe(200);
+    if (res.status !== 200) console.log(res.body); expect(res.status).toBe(200);
     expect(res.body.data.length).toBeGreaterThanOrEqual(2);
     
     const titles = res.body.data.map((i: any) => i.title);
@@ -51,9 +49,8 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
     const res = await request(app)
       .get(`/api/intelligence/what-matters-now?businessId=${businessId}`);
     
-    expect(res.status).toBe(200);
+    if (res.status !== 200) console.log(res.body); expect(res.status).toBe(200);
     expect(res.body.data.length).toBeGreaterThanOrEqual(2);
-    // Runway (impact 85) should be before Capability Gap (impact 60)
     expect(res.body.data[0].impactScore).toBeGreaterThanOrEqual(res.body.data[1].impactScore);
   });
 
@@ -66,7 +63,7 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
         autonomyLevel: 6
       });
     
-    expect(res.status).toBe(200);
+    if (res.status !== 200) console.log(res.body); expect(res.status).toBe(200);
     expect(res.body.data.status).toBe('BLOCKED_BY_SAFETY');
   });
 
@@ -79,7 +76,7 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
         autonomyLevel: 6
       });
     
-    expect(res.status).toBe(200);
+    if (res.status !== 200) console.log(res.body); expect(res.status).toBe(200);
     expect(res.body.data.status).toBe('PENDING_APPROVAL');
   });
 
@@ -92,7 +89,7 @@ describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
         autonomyLevel: 3
       });
     
-    expect(res.status).toBe(200);
+    if (res.status !== 200) console.log(res.body); expect(res.status).toBe(200);
     expect(res.body.data.status).toBe('SUCCESS');
     expect(res.body.data.executedAt).not.toBeNull();
   });

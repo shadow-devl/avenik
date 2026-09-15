@@ -9,8 +9,8 @@ export class AdaptiveIntelligenceService {
       where: { id: businessId },
       include: {
         financialRecords: true,
-        workforceCapacities: true,
-        operationalRisks: true
+        WorkforceCapacity: true,
+        OperationalRisk: true
       }
     });
 
@@ -34,7 +34,7 @@ export class AdaptiveIntelligenceService {
     }
 
     // Check workforce
-    const overloadedRoles = business.workforceCapacities.filter(c => c.overloaded);
+    const overloadedRoles = business.WorkforceCapacity.filter(c => c.overloaded);
     if (overloadedRoles.length > 0) {
       insights.push({
         domain: 'WORKFORCE',

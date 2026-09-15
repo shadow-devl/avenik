@@ -7,21 +7,17 @@ const router = Router();
 
 // Zod schemas
 const businessContextSchema = z.object({
-  query: z.object({
-    businessId: z.string().uuid()
-  })
+  businessId: z.string().uuid()
 });
 
 const executeSchema = z.object({
-  body: z.object({
-    businessId: z.string().uuid(),
-    actionName: z.string(),
-    autonomyLevel: z.number().min(0).max(6)
-  })
+  businessId: z.string().uuid(),
+  actionName: z.string(),
+  autonomyLevel: z.number().min(0).max(6)
 });
 
 // Detect Changes / Proactive Insights
-router.post('/insights/detect', validate(businessContextSchema), async (req, res, next) => {
+router.post('/insights/detect', validate(businessContextSchema, 'query'), async (req, res, next) => {
   try {
     const { businessId } = req.query;
     const insights = await AdaptiveIntelligenceService.detectChanges(businessId as string);
@@ -32,7 +28,7 @@ router.post('/insights/detect', validate(businessContextSchema), async (req, res
 });
 
 // What Matters Now
-router.get('/what-matters-now', validate(businessContextSchema), async (req, res, next) => {
+router.get('/what-matters-now', validate(businessContextSchema, 'query'), async (req, res, next) => {
   try {
     const { businessId } = req.query;
     const priorities = await AdaptiveIntelligenceService.getWhatMattersNow(businessId as string);
