@@ -63,7 +63,7 @@ export class CapitalService {
       identityVerified: false,
       hasFinancialHistory: false,
       hasClearGoal: false,
-      isRegistered: !!business.registrationNumber
+      isRegistered: !!business.legalName
     };
 
     if (business.businessStatus === 'ACTIVE') {

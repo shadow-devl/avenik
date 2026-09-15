@@ -13,7 +13,7 @@ describe('Phase 10.4 Global Finance & Capital Intelligence', () => {
       data: { name: 'Finance Admin', email: `finance_${Date.now()}@test.com`, status: 'ACTIVE' }
     });
     business = await prisma.business.create({
-      data: { ownerUser: { connect: { id: user.id } }, displayName: 'FinCorp', countryCode: 'IN', businessStatus: 'ACTIVE', registrationNumber: 'CIN123' }
+      data: { ownerUser: { connect: { id: user.id } }, displayName: 'FinCorp', legalName: 'FinCorp Pvt Ltd', countryCode: 'IN', businessStatus: 'ACTIVE' }
     });
 
     // Seed some financial records

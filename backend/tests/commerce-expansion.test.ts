@@ -11,7 +11,7 @@ describe('Phase 10.5 Global Commerce & Expansion Intelligence', () => {
       data: { name: 'Commerce Admin', email: `commerce_${Date.now()}@test.com`, status: 'ACTIVE' }
     });
     business = await prisma.business.create({
-      data: { ownerUser: { connect: { id: user.id } }, displayName: 'ExpandCorp', countryCode: 'IN', businessStatus: 'ACTIVE', registrationNumber: 'CIN456' }
+      data: { ownerUser: { connect: { id: user.id } }, displayName: 'ExpandCorp', countryCode: 'IN', businessStatus: 'ACTIVE' }
     });
 
     // Seed some financial records (liquid)
@@ -26,7 +26,7 @@ describe('Phase 10.5 Global Commerce & Expansion Intelligence', () => {
     await prisma.businessHealth.create({
       data: {
         businessId: business.id,
-        healthScore: 85,
+        score: 85, dimension: 'OVERALL', trend: 'STABLE',
         lastAssessment: new Date()
       }
     });
