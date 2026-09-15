@@ -6,38 +6,30 @@
 
 <br />
 
+> 🌍 **Access Avenik Live:**  
+> **[https://avenik.vercel.app](https://avenik.vercel.app)**
+
+---
+
+## 📖 Overview
+
+**Avenik** is a unified entrepreneurial operating, intelligence, funding, and government-support ecosystem. Avenik eliminates the complexity of discovering government schemes by offering a highly secure, AI-driven, and marginalized-entrepreneur-first matching engine.
+
+### ✨ Key Features
+- 🧠 **Entrepreneur Intelligence Core:** Adaptive engine to extract candidate intent effortlessly.
+- 🎯 **Government Scheme Matching:** Hard eligibility verification combined with soft relevance scoring.
+- 🛡️ **Zero-Trust & Provenance:** Robust Role-Based Access Control and strict data isolation. You only see what you own.
+- 📊 **Financial & Health Engine:** Deterministic calculation of business health, EMI, and runway.
+- 📱 **Unified UX Dashboard:** Actionable "Next-Best-Actions" (NBA) and trajectory tracking in a clean, responsive UI.
+
+---
+
 ## 🏆 Project Progress
 
 **Phases 1–33 Completed**
 The repository is an execution-stable baseline with over 80 database models mapped to the ecosystem. Authentication, authorization, digital twin foundations, and context isolation are fully integrated on the backend. 
 
 *Development will continue updating from Phase 34 onwards.*
-
----
-
-## 💻 Local Setup
-
-1. Clone the repository and configure .env (Database and JWT secrets).
-2. Install dependencies:
-   \\\ash
-   cd frontend && npm install && cd ..
-   cd backend && npm install && cd ..
-   \\\
-3. Run backend database setup:
-   \\\ash
-   cd backend
-   npx prisma db push
-   npx prisma generate
-   \\\
-4. Start both servers in separate terminals:
-   \\\ash
-   # Terminal 1
-   cd frontend && npm run dev
-   
-   # Terminal 2
-   cd backend && npm run dev
-   \\\
-5. Open [http://localhost:3000](http://localhost:3000)
 
 ---
 <div align="center">
