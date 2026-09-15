@@ -67,6 +67,7 @@ model User {
   trustProfile        TrustProfile?
   EcosystemMessage    EcosystemMessage[]
   EntrepreneurDigitalTwin EntrepreneurDigitalTwin[]
+  AgentTask               AgentTask[]
 
   @@index([email])
   @@index([countryCode])
@@ -233,6 +234,12 @@ model Business {
   AnomalyDetection        AnomalyDetection[]
   InnovationRecord        InnovationRecord[]
   GovernancePolicy        GovernancePolicy[]
+
+  // Phase 13 Relations
+  IntelligenceSignal      IntelligenceSignal[]
+  AgentTask               AgentTask[]
+  StrategicSimulation     StrategicSimulation[]
+  CompetitiveIntel        CompetitiveIntel[]
 
   @@index([ownerUserId])
   @@index([organizationId])
@@ -1162,4 +1169,105 @@ model GovernancePolicy {
   @@index([domain])
   @@index([status])
   @@map("governance_policies")
+}
+
+// ── Phase 13: Global Intelligent Entrepreneurial Platform Evolution ──
+
+// 13.1 — Intelligence Fabric 2.0: Unified signals
+model IntelligenceSignal {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String   @map("business_id") @db.Uuid
+  domain        String   // FINANCE, CUSTOMER, OPERATIONS, MARKET, ECOSYSTEM, LEGAL, SUSTAINABILITY, WORKFORCE, INNOVATION, RISK
+  signalType    String   @map("signal_type") // DETERIORATION, OPPORTUNITY, RISK, BOTTLENECK, DISRUPTION, REGULATORY_CHANGE, GAP
+  title         String
+  description   String?  @db.Text
+  impact        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  urgency       String   @default("MEDIUM") // LOW, MEDIUM, HIGH, IMMEDIATE
+  confidence    Float    @default(0.5)
+  evidence      Json     @default("[]") @db.JsonB
+  explanation   Json?    @db.JsonB // { what, why, evidence, confidence, unknowns, recommendations }
+  status        String   @default("ACTIVE") // ACTIVE, ACKNOWLEDGED, ACTING, RESOLVED, DISMISSED
+  resolvedAt    DateTime? @map("resolved_at") @db.Timestamptz
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([domain])
+  @@index([impact])
+  @@index([status])
+  @@map("intelligence_signals")
+}
+
+// 13.2 — Autonomous Workflow & Agent Execution
+model AgentTask {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String    @map("business_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  agentType       String    @map("agent_type") // STRATEGY, FINANCE, COMMERCIAL, OPERATIONS, MARKET, ECOSYSTEM, LEGAL, SUSTAINABILITY, RISK, RESEARCH, WORKFORCE
+  purpose         String    @db.Text
+  autonomyLevel   Int       @default(0) @map("autonomy_level") // 0-6
+  tools           Json      @default("[]") @db.JsonB
+  riskLevel       String    @default("LOW") @map("risk_level") // LOW, MEDIUM, HIGH, CRITICAL
+  budget          Json?     @db.JsonB // { maxToolCalls, maxDuration, maxCost }
+  status          String    @default("DRAFT") // DRAFT, AWAITING_APPROVAL, APPROVED, EXECUTING, COMPLETED, REJECTED, FAILED, CANCELLED, ROLLED_BACK
+  result          Json?     @db.JsonB
+  approvedBy      String?   @map("approved_by")
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz
+  startedAt       DateTime? @map("started_at") @db.Timestamptz
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz
+  rollbackInfo    Json?     @map("rollback_info") @db.JsonB
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([status])
+  @@map("agent_tasks")
+}
+
+// 13.3 — Strategy, Simulation & Decision Intelligence
+model StrategicSimulation {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String   @map("business_id") @db.Uuid
+  title         String
+  description   String?  @db.Text
+  scenarioType  String   @map("scenario_type") // BASELINE, UPSIDE, DOWNSIDE, STRESS, CUSTOM
+  assumptions   Json     @default("[]") @db.JsonB
+  variables     Json     @default("{}") @db.JsonB
+  projections   Json     @default("{}") @db.JsonB // revenue, cost, cash, growth, etc.
+  tradeOffs     Json     @default("[]") @map("trade_offs") @db.JsonB
+  outcome       Json?    @db.JsonB
+  status        String   @default("DRAFT") // DRAFT, RUNNING, COMPLETED, ARCHIVED
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([scenarioType])
+  @@map("strategic_simulations")
+}
+
+// 13.4 — Competitive Intelligence
+model CompetitiveIntel {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String   @map("business_id") @db.Uuid
+  competitorName String  @map("competitor_name")
+  domain        String   // PRICING, PRODUCT, MARKET_SHARE, TECHNOLOGY, CUSTOMER, EXPANSION
+  insight       String   @db.Text
+  confidence    Float    @default(0.5)
+  source        String?
+  provenance    String   @default("USER_REPORTED")
+  impactOnBusiness String? @map("impact_on_business") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([domain])
+  @@map("competitive_intel")
 }
