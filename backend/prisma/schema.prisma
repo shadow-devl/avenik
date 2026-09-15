@@ -217,8 +217,9 @@ model Business {
   trustProfile            TrustProfile?
 
   // Ecosystem Relations
-  sourceRelationships EcosystemRelationship[] @relation("SourceRelationships")
-  targetRelationships EcosystemRelationship[] @relation("TargetRelationships")
+  sourceRelationships     EcosystemRelationship[]   @relation("SourceRelationships")
+  targetRelationships     EcosystemRelationship[]   @relation("TargetRelationships")
+  CommercialExpansionPlan CommercialExpansionPlan[]
 
   @@index([ownerUserId])
   @@index([organizationId])
@@ -457,6 +458,53 @@ model FinancialRecord {
 
   @@index([businessId, transactionDate])
   @@map("financial_records")
+}
+
+// -----------------------------------------
+// COMMERCE & EXPANSION (PHASE 10.5)
+// -----------------------------------------
+model CommercialExpansionPlan {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  targetMarket     String   @map("target_market") // e.g., 'EU', 'US_ENTERPRISE'
+  status           String   @default("EVALUATING") // EVALUATING, APPROVED, EXECUTING, PAUSED
+  viabilityScore   Float?   @map("viability_score")
+  investmentNeeded Float?   @map("investment_needed")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  segments         CustomerSegment[]
+  pricingScenarios PricingScenario[]
+
+  @@index([businessId, status])
+  @@map("commercial_expansion_plans")
+}
+
+model CustomerSegment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId    String   @map("plan_id") @db.Uuid
+  name      String
+  size      Int?
+  readiness String   @default("UNKNOWN") // HIGH, MEDIUM, LOW, UNKNOWN
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  plan CommercialExpansionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@map("customer_segments")
+}
+
+model PricingScenario {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId          String   @map("plan_id") @db.Uuid
+  currency        String   @db.Char(3)
+  pricePoint      Float    @map("price_point")
+  projectedMargin Float?   @map("projected_margin")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  plan CommercialExpansionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_scenarios")
 }
 
 // T. GOVERNMENT SUPPORT EXECUTION
