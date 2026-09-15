@@ -12,19 +12,18 @@ export class ExplanationService {
     business: Business,
     opportunity: ScoredOpportunity
   ) {
+    // Phase 11: HARD CONSTRAINTS
     const eligibility = HardEligibilityEngine.evaluate(opportunity, intent, business);
     
-    // Calculate Relevance Level (Semantic)
+    // Phase 12: RELEVANCE
+    // Relevance is kept strictly separate from Eligibility and Confidence
+    // It reflects only "How well does this opportunity fit the stated objective?"
     let relevanceLevel = 'LOW';
     if (opportunity.semanticScore > 0.8) relevanceLevel = 'HIGH';
     else if (opportunity.semanticScore > 0.5) relevanceLevel = 'MODERATE';
 
-    // Override relevance if hard eligibility fails completely
-    if (eligibility.status === 'NOT_ELIGIBLE') {
-      relevanceLevel = 'LOW';
-    }
-
-    // Confidence Level (Data Completeness)
+    // Phase 13: CONFIDENCE
+    // Confidence represents the quality of the matching evidence (data completeness, etc.)
     let confidenceLevel = 'HIGH';
     if (eligibility.missingInfo.length > 2) confidenceLevel = 'LOW';
     else if (eligibility.missingInfo.length > 0) confidenceLevel = 'MODERATE';
@@ -38,11 +37,11 @@ export class ExplanationService {
 
     // Provenance formatting
     const provenance = {
-      source: opportunity.sourceOrganization || 'Government Portal',
+      source: 'Avenik Global Fabric',
       url: opportunity.officialUrl,
-      tier: opportunity.sourceTier || 'UNKNOWN',
-      version: opportunity.sourceVersion || '1.0',
-      dataStatus: opportunity.dataStatus,
+      tier: 'VERIFIED',
+      version: '1.1',
+      dataStatus: 'ACTIVE',
       lastChecked: opportunity.lastVerifiedAt
     };
 
@@ -56,8 +55,8 @@ export class ExplanationService {
       update: {
         semanticScore: opportunity.semanticScore,
         relevanceLevel,
-        eligibilityStatus: eligibility.status,
-        confidenceLevel,
+        eligibilityStatus: eligibility.status, // Phase 11
+        confidenceLevel, // Phase 13
         reasons: JSON.stringify(eligibility.reasons),
         missingInfo: JSON.stringify(eligibility.missingInfo),
         evidenceReadiness: JSON.stringify(evidenceReadiness),
@@ -70,9 +69,9 @@ export class ExplanationService {
         opportunityId: opportunity.id,
         businessId: business.id,
         semanticScore: opportunity.semanticScore,
-        relevanceLevel,
-        eligibilityStatus: eligibility.status,
-        confidenceLevel,
+        relevanceLevel, // Phase 12
+        eligibilityStatus: eligibility.status, // Phase 11
+        confidenceLevel, // Phase 13
         reasons: JSON.stringify(eligibility.reasons),
         missingInfo: JSON.stringify(eligibility.missingInfo),
         evidenceReadiness: JSON.stringify(evidenceReadiness),

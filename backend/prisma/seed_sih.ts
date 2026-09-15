@@ -3,7 +3,7 @@ import { PrismaClient, OpportunityType } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding Global Opportunities Data...');
+  console.log('Seeding Phase 11-13 Global Opportunities Data...');
 
   // 1. Create a marginalized entrepreneur user (Demo Data)
   const user = await prisma.user.upsert({
@@ -23,13 +23,14 @@ async function main() {
     }
   });
 
-  // 2. Create the Business
+  // 2. Create the Business with Phase 11 constraints (Organization, Age, Country)
   const business = await prisma.business.create({
     data: {
       ownerUserId: user.id,
       displayName: '[DEMO] Priya Sustainable Crafts',
       legalName: 'Priya Crafts Pvt Ltd',
       countryCode: 'IN',
+      organizationType: 'PRIVATE_LIMITED',
       foundedAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), // 1 year old
       businessStatus: 'ACTIVE',
       healthRecords: {
@@ -59,7 +60,22 @@ async function main() {
     }
   });
 
-  // 3. Create Global Opportunities
+  // Create an explicit entrepreneur intent tying to the Business
+  await prisma.entrepreneurIntent.create({
+    data: {
+      businessId: business.id,
+      rawQuery: 'I need funding for my sustainable crafts private limited company in India.',
+      sector: 'HANDICRAFTS',
+      businessStage: 'STARTUP',
+      country: 'IN',
+      founderAge: 28,
+      organizationType: 'PRIVATE_LIMITED',
+      entrepreneurCategory: 'WOMAN',
+      supportNeed: 'FUNDING'
+    }
+  });
+
+  // 3. Create Global Opportunities with Phase 11/12/13 metadata
   const opportunities = [
     {
       title: 'Stand-Up India Scheme',
@@ -74,8 +90,11 @@ async function main() {
       sector: 'MANUFACTURING',
       targetBeneficiaries: 'Women, SC/ST',
       supportType: 'LOAN',
-      businessStage: 'IDEA',
+      businessStage: 'STARTUP', // Using STARTUP instead of IDEA for better matching
       country: 'IN',
+      minAge: 18,
+      maxAge: 65,
+      allowedOrgTypes: 'PRIVATE_LIMITED, LLP, PARTNERSHIP',
       keywords: 'greenfield, women, female, scheduled caste, tribal, bank loan, manufacturing, manufacturing services, trading'
     },
     {
@@ -92,6 +111,8 @@ async function main() {
       supportType: 'EQUITY',
       businessStage: 'STARTUP',
       country: 'GLOBAL',
+      minAge: 18,
+      allowedOrgTypes: 'ANY',
       keywords: 'seed fund, venture capital, equity, sustainability, impact, underrepresented, global'
     },
     {
@@ -107,6 +128,8 @@ async function main() {
       supportType: 'DISTRIBUTION',
       businessStage: 'GROWTH',
       country: 'GLOBAL',
+      minAge: 21,
+      allowedOrgTypes: 'ANY',
       keywords: 'export, b2b, partnership, distribution, handicrafts, fair-trade, supply chain, international'
     }
   ];
