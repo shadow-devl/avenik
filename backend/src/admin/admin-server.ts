@@ -5,6 +5,20 @@ import { logger } from '../utils/logger.js';
 const adminApp = express();
 adminApp.use(express.json({ limit: '10mb' }));
 
+// ── Security / Authentication ────────────────────────
+adminApp.use((req, res, next) => {
+  const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+  const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+  
+  // Use admin / avenik2026 as credentials
+  if (login === 'admin' && password === 'avenik2026') {
+    return next();
+  }
+  
+  res.set('WWW-Authenticate', 'Basic realm="Avenik Admin Panel"');
+  res.status(401).send('Authentication required.');
+});
+
 // ── Admin API Routes ─────────────────────────────
 
 // Dashboard stats
