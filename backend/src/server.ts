@@ -29,6 +29,7 @@ import actionsRouter from './routes/actions.js';
 import { intelligenceRouter } from './routes/intelligence.js';
 import { maturityRouter } from './routes/maturity.js';
 import { evolutionRouter } from './routes/evolution.js';
+import { globalPlatformRouter } from './routes/global-platform.js';
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use('/api/actions', requireAuth, actionsRouter);
 app.use('/api/intelligence', intelligenceRouter);
 app.use('/api/maturity', maturityRouter);
 app.use('/api/evolution', evolutionRouter);
+app.use('/api/global', globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {

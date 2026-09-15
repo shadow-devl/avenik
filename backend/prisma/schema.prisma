@@ -244,6 +244,9 @@ model Business {
   @@index([ownerUserId])
   @@index([organizationId])
   @@map("businesses")
+  globalNetworks      GlobalEcosystemNetwork[]
+  intelligenceNodes   PlatformIntelligenceNode[]
+  economicEngines     EconomicEngine[]
 }
 
 model ProvenanceRecord {
@@ -1270,4 +1273,66 @@ model CompetitiveIntel {
   @@index([businessId])
   @@index([domain])
   @@map("competitive_intel")
+}
+
+
+// ── Phases 14-33: Global Ecosystem & Platform Scale Models ──
+
+
+
+
+
+
+
+
+
+model GlobalEcosystemNetwork {
+  id              String    @id @default(uuid()) @db.Uuid
+  businessId      String    @db.Uuid
+  networkType     String    // e.g., 'SUPPLY_CHAIN', 'INVESTMENT', 'INNOVATION_CLUSTER'
+  region          String
+  capacityScore   Float     @default(0.0)
+  activeNodes     Int       @default(0)
+  metadata        Json?
+  status          String    @default("ACTIVE") // ACTIVE, OPTIMIZING, DEGRADED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([networkType])
+}
+
+model PlatformIntelligenceNode {
+  id              String    @id @default(uuid()) @db.Uuid
+  businessId      String    @db.Uuid
+  nodeRole        String    // e.g., 'PREDICTIVE_ANALYST', 'SUPPLY_CHAIN_OPTIMIZER'
+  autonomyLevel   Int       @default(3)
+  computeAllocated Float    @default(1.0)
+  decisionsMade   Int       @default(0)
+  successRate     Float     @default(1.0)
+  status          String    @default("ACTIVE")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model EconomicEngine {
+  id              String    @id @default(uuid()) @db.Uuid
+  businessId      String    @db.Uuid
+  scenarioName    String
+  macroFactors    Json      // Inflation, Interest rates, FX
+  projectedGrowth Float
+  riskExposure    Float
+  resilienceScore Float     @default(0.5)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
