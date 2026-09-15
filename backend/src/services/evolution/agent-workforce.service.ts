@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 13.2 — Autonomous Agent Workforce & Execution
+ * Autonomous Agent Workforce & Execution
  */
 export class AgentWorkforceService {
   /**

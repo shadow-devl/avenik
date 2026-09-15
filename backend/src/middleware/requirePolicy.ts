@@ -33,7 +33,7 @@ export const isResourceOwner = (resourceUserIdParam: string = 'userId'): PolicyP
 
 export const isOrganizationMember = (): PolicyPredicate => {
   return async (req: Request) => {
-    // Phase 1.2: Check if req.user.userId belongs to req.params.organizationId via DB
+    // Check if req.user.userId belongs to req.params.organizationId via DB
     return true; 
   };
 };

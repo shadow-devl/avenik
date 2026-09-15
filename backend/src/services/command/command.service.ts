@@ -2,7 +2,7 @@ import { prisma } from '../../db.js';
 
 export class CommandService {
   /**
-   * Generates a unified intelligence summary across all Phase 10 modules
+   * Generates a unified intelligence summary across all modules
    * (Finance, Commerce, Workforce, Operations, Strategy)
    */
   static async generateUnifiedSummary(businessId: string) {

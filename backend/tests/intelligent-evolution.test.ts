@@ -8,7 +8,7 @@ let userId: string;
 let businessId: string;
 let orgId: string;
 
-describe('Phase 13: Global Intelligent Entrepreneurial Platform Evolution', () => {
+describe('Global Intelligent Entrepreneurial Platform Evolution', () => {
   beforeAll(async () => {
     const user = await prisma.user.create({
       data: { name: 'Phase13 Tester', email: `phase13-${Date.now()}@test.com`, status: 'ACTIVE' },

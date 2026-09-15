@@ -4,7 +4,7 @@ import { CapitalService } from '../src/services/finance/capital.service.js';
 import { ScenarioService } from '../src/services/finance/scenario.service.js';
 import { ContextService } from '../src/services/context.service.js';
 
-describe('Phase 10.4 Global Finance & Capital Intelligence', () => {
+describe('Global Finance & Capital Intelligence', () => {
   let user: any;
   let business: any;
 

@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 12.7 — Innovation, Research, Knowledge & Intellectual Capital
+ * Innovation, Research, Knowledge & Intellectual Capital
  */
 export class InnovationService {
   /**

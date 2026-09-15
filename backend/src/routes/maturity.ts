@@ -22,7 +22,7 @@ const digitalTwinSyncSchema = z.object({
 const preferencesSchema = z.object({
   userId: z.string().uuid(),
   businessId: z.string().uuid(),
-  preferences: z.record(z.any()),
+  preferences: z.record(z.string(), z.any()),
 });
 
 const anomalyFilterSchema = z.object({
@@ -44,7 +44,7 @@ const innovationCreateSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   hypothesis: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 const innovationUpdateSchema = z.object({

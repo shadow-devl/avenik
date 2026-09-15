@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 12.1 — Entrepreneur Digital Twin & Personal Intelligence
+ * Entrepreneur Digital Twin & Personal Intelligence
  * Strengthens existing Digital Twin into a canonical entrepreneur intelligence layer.
  */
 export class DigitalTwinService {

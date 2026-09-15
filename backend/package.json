@@ -15,6 +15,9 @@
     "db:studio": "prisma studio",
     "admin": "tsx src/admin/admin-server.ts"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed_sih.ts"
+  },
   "dependencies": {
     "@google/genai": "^2.22.0",
     "bcryptjs": "^3.0.3",

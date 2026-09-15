@@ -1,5 +1,5 @@
 -- ============================================================
--- AVENIK Phase 1 — Foundation Database Schema
+-- AVENIK Feature — Foundation Database Schema
 -- PostgreSQL (Neon compatible)
 -- ============================================================
 

@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 12.2 — Anomaly Detection & Prescriptive Intelligence
+ * Anomaly Detection & Prescriptive Intelligence
  * Detects unusual metrics and provides options/trade-offs/recommendations.
  */
 export class AnomalyService {

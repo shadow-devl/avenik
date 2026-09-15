@@ -12,17 +12,17 @@ export class ExplanationService {
     business: Business,
     opportunity: ScoredOpportunity
   ) {
-    // Phase 11: HARD CONSTRAINTS
+    // HARD CONSTRAINTS
     const eligibility = HardEligibilityEngine.evaluate(opportunity, intent, business);
     
-    // Phase 12: RELEVANCE
+    // RELEVANCE
     // Relevance is kept strictly separate from Eligibility and Confidence
     // It reflects only "How well does this opportunity fit the stated objective?"
     let relevanceLevel = 'LOW';
     if (opportunity.semanticScore > 0.8) relevanceLevel = 'HIGH';
     else if (opportunity.semanticScore > 0.5) relevanceLevel = 'MODERATE';
 
-    // Phase 13: CONFIDENCE
+    // CONFIDENCE
     // Confidence represents the quality of the matching evidence (data completeness, etc.)
     let confidenceLevel = 'HIGH';
     if (eligibility.missingInfo.length > 2) confidenceLevel = 'LOW';

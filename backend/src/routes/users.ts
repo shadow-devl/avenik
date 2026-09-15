@@ -17,7 +17,7 @@ router.get('/me', requireAuth, (req, res) => {
 // GET /api/users/:userId/profile
 router.get('/:userId/profile', requireAuth, requirePolicy(isResourceOwner('userId')), async (req, res, next) => {
   try {
-    // Phase 1.2: Database implementation would fetch the user profile here.
+    // Database implementation would fetch the user profile here.
     // For now, we mock the return to prove the ABAC policy works.
     res.json({
       success: true,

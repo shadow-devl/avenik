@@ -9,7 +9,7 @@ router.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many a
 
 /** POST /api/auth/register */
 router.post('/register', (_req: Request, res: Response) => {
-  // Phase 1.1 implementation placeholder
+  // implementation placeholder
   success(res, { message: 'Registration endpoint ready. Full implementation in Phase 1.1.' }, 'Register endpoint', 200);
 });
 

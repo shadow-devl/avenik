@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phases 14-33: Consolidated Global Ecosystem, Intelligence Nodes & Economic Engine
+ * Consolidated Global Ecosystem, Intelligence Nodes & Economic Engine
  */
 export class GlobalPlatformService {
   // ── Ecosystem Network ──

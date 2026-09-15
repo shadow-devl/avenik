@@ -3,14 +3,14 @@ import request from 'supertest';
 import app from '../src/server.js';
 import { prisma } from '../src/db.js';
 
-describe('Phase 11: Global Adaptive Intelligence Evolution', () => {
+describe('Global Adaptive Intelligence Evolution', () => {
   let businessId: string;
 
   beforeAll(async () => {
     const business = await prisma.business.create({
       data: {
-        displayName: 'Phase 11 Test Corp',
-        legalName: 'Phase 11 Test Corp Ltd',
+        displayName: 'Test Corp',
+        legalName: 'Test Corp Ltd',
         financialRecords: {
           create: [
             { type: 'INFLOW', amount: 5000, transactionDate: new Date(), description: 'Revenue', category: 'SALES' },

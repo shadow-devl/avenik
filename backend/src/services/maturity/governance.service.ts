@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 /**
- * Phase 12.8 — Governance, Risk, Resilience, Security & Responsible AI
+ * Governance, Risk, Resilience, Security & Responsible AI
  */
 export class GovernanceService {
   /**
@@ -28,7 +28,7 @@ export class GovernanceService {
           evidenceRequired: data.evidenceRequired ?? existing.evidenceRequired,
           reviewFrequency: data.reviewFrequency ?? existing.reviewFrequency,
           riskLevel: data.riskLevel ?? existing.riskLevel,
-          mitigations: data.mitigations ?? existing.mitigations,
+          mitigations: (data.mitigations ?? existing.mitigations) as Prisma.InputJsonValue,
         },
       });
     }

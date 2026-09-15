@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 13.3 — Strategic Simulation & Decision Intelligence
+ * Strategic Simulation & Decision Intelligence
  */
 export class SimulationService {
   /**

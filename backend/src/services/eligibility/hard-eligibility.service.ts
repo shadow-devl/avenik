@@ -10,7 +10,7 @@ export interface EligibilityResult {
 export class HardEligibilityEngine {
   /**
    * Deterministically evaluates if a business meets the hard criteria of an opportunity.
-   * Phase 11: Hard Constraints must be evaluated strictly before soft relevance.
+   * Hard Constraints must be evaluated strictly before soft relevance.
    */
   static evaluate(opportunity: ScoredOpportunity, intent: EntrepreneurIntent, business: Business): EligibilityResult {
     const reasons: string[] = [];
@@ -18,7 +18,7 @@ export class HardEligibilityEngine {
     let isEligible = true;
     let isPotentiallyEligible = false;
 
-    // Phase 11: Hard Constraint 1 - Country Restrictions
+    // Hard Constraint 1 - Country Restrictions
     if (opportunity.country && opportunity.country !== 'GLOBAL') {
       const bizCountry = business.countryCode || intent.country;
       if (bizCountry && opportunity.country !== bizCountry) {
@@ -31,7 +31,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Phase 11: Hard Constraint 2 - Age Requirements
+    // Hard Constraint 2 - Age Requirements
     if (opportunity.minAge || opportunity.maxAge) {
       if (intent.founderAge) {
         if (opportunity.minAge && intent.founderAge < opportunity.minAge) {
@@ -48,7 +48,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Phase 11: Hard Constraint 3 - Organization Type
+    // Hard Constraint 3 - Organization Type
     if (opportunity.allowedOrgTypes) {
       const allowed = opportunity.allowedOrgTypes.toLowerCase();
       const orgType = (business.organizationType || intent.organizationType || '').toLowerCase();
@@ -64,7 +64,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Phase 11: Hard Constraint 4 - Sector Check
+    // Hard Constraint 4 - Sector Check
     if (opportunity.sector) {
       if (intent.sector && opportunity.sector !== intent.sector) {
         reasons.push(`Opportunity targets ${opportunity.sector}, but you selected ${intent.sector}.`);
@@ -76,7 +76,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Phase 11: Hard Constraint 5 - Business Stage Check
+    // Hard Constraint 5 - Business Stage Check
     if (opportunity.businessStage) {
       if (intent.businessStage && opportunity.businessStage !== intent.businessStage) {
         reasons.push(`Opportunity targets ${opportunity.businessStage} stage, but you are ${intent.businessStage}.`);
@@ -88,7 +88,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Phase 11: Marginalized Category Check (Legacy SIH heuristic)
+    // Marginalized Category Check (Legacy SIH heuristic)
     const rulesLower = (opportunity.eligibilityRules || '').toLowerCase();
     if (rulesLower.includes('sc/st') || rulesLower.includes('woman') || rulesLower.includes('women')) {
       if (intent.entrepreneurCategory === 'WOMAN' || intent.entrepreneurCategory === 'SC_ST') {
@@ -102,7 +102,7 @@ export class HardEligibilityEngine {
       }
     }
 
-    // Determine final status based on Phase 11 Rules
+    // Determine final status based on Rules
     let status: EligibilityResult['status'] = 'ELIGIBLE';
     
     if (!isEligible) {

@@ -7,7 +7,7 @@ import { config } from '../src/config/index';
 
 const prisma = new PrismaClient();
 
-describe('SIH Phase 2 E2E Demonstration', () => {
+describe('SIH E2E Demonstration', () => {
   let businessId: string;
   let authToken: string;
   

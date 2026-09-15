@@ -4,7 +4,7 @@ import { EcosystemDiscoveryService } from '../src/services/ecosystem/ecosystem-d
 import { EcosystemRelationshipService } from '../src/services/ecosystem/ecosystem-relationship.service.js';
 import { ContextService } from '../src/services/context.service.js';
 
-describe('Phase 10.3 Ecosystem Network & Market-Access Intelligence', () => {
+describe('Ecosystem Network & Market-Access Intelligence', () => {
   let userA: any, userB: any;
   let businessA: any, businessB: any;
 

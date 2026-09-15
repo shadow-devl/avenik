@@ -7,7 +7,7 @@ import { config } from '../src/config/index';
 
 const prisma = new PrismaClient();
 
-describe('Phase 2.1 Context Security & Isolation', () => {
+describe('Context Security & Isolation', () => {
   let userA_Id: string;
   let userA_Token: string;
   let businessA_Id: string;

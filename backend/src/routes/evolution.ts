@@ -55,7 +55,7 @@ const simulationCreateSchema = z.object({
   description: z.string().optional(),
   scenarioType: z.string(),
   assumptions: z.array(z.any()).optional(),
-  variables: z.record(z.any()).optional(),
+  variables: z.record(z.string(), z.any()).optional(),
 });
 
 const competitiveIntelSchema = z.object({

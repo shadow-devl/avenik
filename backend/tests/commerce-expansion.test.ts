@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../src/db.js';
 import { CommerceService } from '../src/services/commerce/commerce.service.js';
 
-describe('Phase 10.5 Global Commerce & Expansion Intelligence', () => {
+describe('Global Commerce & Expansion Intelligence', () => {
   let user: any;
   let business: any;
 

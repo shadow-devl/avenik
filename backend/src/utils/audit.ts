@@ -15,7 +15,7 @@ interface AuditEventParams {
 
 /**
  * Creates an immutable audit log entry in the database.
- * Crucial for Phase 1.3: Privacy + Audit requirements.
+ * Crucial for Privacy + Audit requirements.
  */
 export async function logAuditEvent(params: AuditEventParams) {
   try {

@@ -5,13 +5,13 @@ import { OperationsService } from '../src/services/operations/operations.service
 import { StrategyService } from '../src/services/strategy/strategy.service.js';
 import { CommandService } from '../src/services/command/command.service.js';
 
-describe('Phase 10 Remainder (10.6 - 10.9)', () => {
+describe('(10.6 - 10.9)', () => {
   let user: any;
   let business: any;
 
   beforeAll(async () => {
     user = await prisma.user.create({
-      data: { name: 'Phase 10 Admin', email: `phase10_${Date.now()}@test.com`, status: 'ACTIVE' }
+      data: { name: 'Admin', email: `phase10_${Date.now()}@test.com`, status: 'ACTIVE' }
     });
     business = await prisma.business.create({
       data: { ownerUser: { connect: { id: user.id } }, displayName: 'Phase10Corp', countryCode: 'IN', businessStatus: 'ACTIVE' }

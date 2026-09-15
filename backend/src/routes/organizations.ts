@@ -35,7 +35,7 @@ router.post('/', requireAuth, async (req, res, next) => {
 // GET /api/organizations
 router.get('/', requireAuth, async (req, res, next) => {
   try {
-    // Phase 1.2: Tenant Isolation
+    // Tenant Isolation
     // Only fetch organizations this user is a member of
     const orgs = await prisma.organization.findMany({
       where: {

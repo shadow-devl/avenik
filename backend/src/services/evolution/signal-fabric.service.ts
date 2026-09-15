@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 13.1 — Intelligence Fabric 2.0: Unified Signal Management
+ * Intelligence Fabric 2.0: Unified Signal Management
  */
 export class SignalFabricService {
   /**

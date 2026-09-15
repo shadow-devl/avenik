@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Phase 13.4 — Competitive Intelligence
+ * Competitive Intelligence
  */
 export class CompetitiveIntelService {
   /**

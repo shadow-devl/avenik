@@ -12,7 +12,7 @@ interface ProvenanceData {
 
 /**
  * Creates a provenance record to track the verifiable source of data.
- * Phase 1.4: "Verify privately, prove selectively"
+ * "Verify privately, prove selectively"
  */
 export async function createProvenanceRecord(data: ProvenanceData) {
   return await prisma.provenanceRecord.create({

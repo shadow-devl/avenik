@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             AVENIK<span className="text-blue-500">.</span>
           </Link>
           <div className="mt-2 text-xs font-bold text-slate-500 tracking-widest uppercase">
-            Phase 2 OS
+             OS
           </div>
         </div>
 

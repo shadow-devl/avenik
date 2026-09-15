@@ -40,7 +40,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { businessId } = req.query;
-      // Phase 10: Enforce Context Isolation
+      // Enforce Context Isolation
       await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
       const matches = await EcosystemDiscoveryService.discoverMatches(businessId as string);
@@ -89,7 +89,7 @@ router.post(
       const { relationshipId, businessId } = req.body;
       
       // Ensure the user owns the business that is consenting
-      await ContextService.resolveContext(req.user!.userId, businessId);
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
 
       // In a real impl, we'd verify that `relationshipId` targets `businessId`.
       const rel = await EcosystemRelationshipService.consentConnection(relationshipId);

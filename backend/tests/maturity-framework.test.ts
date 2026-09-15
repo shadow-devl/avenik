@@ -8,7 +8,7 @@ let userId: string;
 let businessId: string;
 let orgId: string;
 
-describe('Phase 12: Global Intelligent Entrepreneurial Platform Maturity', () => {
+describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   beforeAll(async () => {
     // Create test user
     const user = await prisma.user.create({
