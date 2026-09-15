@@ -27,7 +27,7 @@ export class CommerceService {
     // 1. Health Base Score (max 40 points)
     const latestHealth = business.healthRecords[0];
     if (latestHealth) {
-      viabilityScore += (latestHealth.healthScore / 100) * 40;
+      viabilityScore += (latestHealth.score / 100) * 40;
     }
 
     // 2. Financial Readiness (max 30 points)

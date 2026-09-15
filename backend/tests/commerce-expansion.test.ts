@@ -27,7 +27,7 @@ describe('Phase 10.5 Global Commerce & Expansion Intelligence', () => {
       data: {
         businessId: business.id,
         score: 85, dimension: 'OVERALL', trend: 'STABLE',
-        lastAssessment: new Date()
+        calculatedAt: new Date()
       }
     });
 
