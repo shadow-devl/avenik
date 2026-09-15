@@ -26,8 +26,8 @@ adminApp.get('/api/admin/stats', async (_req, res) => {
   const [users, businesses, schemes, applications, goals, recommendations, healthRecords, fundingRequests] = await Promise.all([
     prisma.user.count(),
     prisma.business.count(),
-    prisma.governmentScheme.count(),
-    prisma.schemeApplication.count(),
+    prisma.opportunity.count(),
+    prisma.opportunityEngagement.count(),
     prisma.goal.count(),
     prisma.recommendation.count(),
     prisma.businessHealth.count(),
@@ -87,9 +87,9 @@ function crudRoutes(path: string, model: any, options?: { include?: any; orderBy
 
 // Register CRUD for all major models
 crudRoutes('users', prisma.user, { include: { businesses: true, roles: { include: { role: true } } } });
-crudRoutes('businesses', prisma.business, { include: { owner: true, goals: true, schemeApplications: { include: { scheme: true } } } });
-crudRoutes('schemes', prisma.governmentScheme);
-crudRoutes('applications', prisma.schemeApplication, { include: { scheme: true, business: true } });
+crudRoutes('businesses', prisma.business, { include: { owner: true, goals: true, opportunityEngagements: { include: { scheme: true } } } });
+crudRoutes('schemes', prisma.opportunity);
+crudRoutes('applications', prisma.opportunityEngagement, { include: { scheme: true, business: true } });
 crudRoutes('goals', prisma.goal);
 crudRoutes('actions', prisma.action);
 crudRoutes('recommendations', prisma.recommendation);
@@ -115,8 +115,8 @@ adminApp.post('/api/admin/:model/bulk-delete', async (req, res) => {
     const { ids } = req.body;
     const modelName = req.params.model;
     const modelMap: Record<string, any> = {
-      users: prisma.user, businesses: prisma.business, schemes: prisma.governmentScheme,
-      applications: prisma.schemeApplication, goals: prisma.goal, actions: prisma.action,
+      users: prisma.user, businesses: prisma.business, opportunities: { label: 'Opportunities', columns: ['title','department','status','maxFundingAmount'], createFields: [{n:'title',t:'text'},{n:'department',t:'text'},{n:'description',t:'textarea'},{n:'eligibilityRules',t:'textarea',l:'Eligibility'},{n:'maxFundingAmount',t:'number',l:'Max Funding (₹)'},{n:'officialUrl',t:'text',l:'Official URL'},{n:'status',t:'select',opts:['ACTIVE','INACTIVE','EXPIRED']}] },
+      engagements: prisma.opportunityEngagement, goals: prisma.goal, actions: prisma.action,
       recommendations: prisma.recommendation, health: prisma.businessHealth,
     };
     const m = modelMap[modelName];
@@ -153,13 +153,13 @@ adminApp.post('/api/admin/seed-sih', async (_req, res) => {
 
     // Seed government schemes
     const schemes = [
-      { id: 'scheme-standup', title: 'Stand-Up India', department: 'Ministry of Finance', description: 'Loans between ₹10 lakh and ₹1 crore for SC/ST and women entrepreneurs.', eligibilityText: 'Women or SC/ST, greenfield enterprise, 18+ years', maxFundingAmount: 10000000, officialUrl: 'https://www.standupmitra.in', status: 'ACTIVE' as const },
-      { id: 'scheme-mudra', title: 'Pradhan Mantri Mudra Yojana', department: 'Ministry of Finance', description: 'Micro-enterprise loans up to ₹10 lakh under Shishu, Kishore, and Tarun categories.', eligibilityText: 'Non-corporate, non-farm small/micro enterprises', maxFundingAmount: 1000000, officialUrl: 'https://www.mudra.org.in', status: 'ACTIVE' as const },
-      { id: 'scheme-pmegp', title: 'Prime Minister Employment Generation Programme', department: 'Ministry of MSME', description: 'Credit-linked subsidy for setting up micro enterprises.', eligibilityText: '18+ years, VIII pass for manufacturing projects above ₹10 lakh', maxFundingAmount: 2500000, officialUrl: 'https://www.kviconline.gov.in', status: 'ACTIVE' as const },
+      { id: 'scheme-standup', title: 'Stand-Up India', department: 'Ministry of Finance', description: 'Loans between ₹10 lakh and ₹1 crore for SC/ST and women entrepreneurs.', eligibilityRules: 'Women or SC/ST, greenfield enterprise, 18+ years', benefits: 'See description for benefits', maxFundingAmount: 10000000, officialUrl: 'https://www.standupmitra.in', status: 'ACTIVE' as const },
+      { id: 'scheme-mudra', title: 'Pradhan Mantri Mudra Yojana', department: 'Ministry of Finance', description: 'Micro-enterprise loans up to ₹10 lakh under Shishu, Kishore, and Tarun categories.', eligibilityRules: 'Non-corporate, non-farm small/micro enterprises', benefits: 'See description for benefits', maxFundingAmount: 1000000, officialUrl: 'https://www.mudra.org.in', status: 'ACTIVE' as const },
+      { id: 'scheme-pmegp', title: 'Prime Minister Employment Generation Programme', department: 'Ministry of MSME', description: 'Credit-linked subsidy for setting up micro enterprises.', eligibilityRules: '18+ years, VIII pass for manufacturing projects above ₹10 lakh', benefits: 'See description for benefits', maxFundingAmount: 2500000, officialUrl: 'https://www.kviconline.gov.in', status: 'ACTIVE' as const },
     ];
 
     for (const s of schemes) {
-      await prisma.governmentScheme.upsert({ where: { id: s.id }, update: s, create: s });
+      await prisma.opportunity.upsert({ where: { id: s.id }, update: s, create: s });
     }
 
     res.json({ success: true, user: user.id, business: business.id, schemesSeeded: schemes.length });
@@ -335,8 +335,8 @@ const modelConfig = {
   users:              { label: 'Users',              columns: ['name','email','createdAt'], createFields: [{n:'name',t:'text'},{n:'email',t:'email'}] },
   businesses:         { label: 'Businesses',         columns: ['displayName','countryCode','createdAt'], createFields: [{n:'displayName',t:'text',l:'Display Name'},{n:'countryCode',t:'text',l:'Country Code'},{n:'ownerUserId',t:'text',l:'Owner User ID'},{n:'organizationId',t:'text',l:'Organization ID'}] },
   organizations:      { label: 'Organizations',      columns: ['name','createdAt'], createFields: [{n:'name',t:'text'}] },
-  schemes:            { label: 'Government Schemes',  columns: ['title','department','status','maxFundingAmount'], createFields: [{n:'title',t:'text'},{n:'department',t:'text'},{n:'description',t:'textarea'},{n:'eligibilityText',t:'textarea',l:'Eligibility'},{n:'maxFundingAmount',t:'number',l:'Max Funding (₹)'},{n:'officialUrl',t:'text',l:'Official URL'},{n:'status',t:'select',opts:['ACTIVE','INACTIVE','EXPIRED']}] },
-  applications:       { label: 'Scheme Applications', columns: ['businessId','schemeId','status','matchConfidence'], createFields: [{n:'businessId',t:'text'},{n:'schemeId',t:'text'},{n:'status',t:'select',opts:['DISCOVERED','IN_PROGRESS','SUBMITTED','APPROVED','REJECTED']},{n:'matchConfidence',t:'number',l:'Confidence (0-1)'}] },
+  opportunities: { label: 'Opportunities', columns: ['title','department','status','maxFundingAmount'], createFields: [{n:'title',t:'text'},{n:'department',t:'text'},{n:'description',t:'textarea'},{n:'eligibilityRules',t:'textarea',l:'Eligibility'},{n:'maxFundingAmount',t:'number',l:'Max Funding (₹)'},{n:'officialUrl',t:'text',l:'Official URL'},{n:'status',t:'select',opts:['ACTIVE','INACTIVE','EXPIRED']}] },
+  engagements: { label: 'Engagements', columns: ['businessId','opportunityId','status','matchConfidence'], createFields: [{n:'businessId',t:'text'},{n:'opportunityId',t:'text'},{n:'status',t:'select',opts:['DISCOVERED','IN_PROGRESS','SUBMITTED','APPROVED','REJECTED']},{n:'matchConfidence',t:'number',l:'Confidence (0-1)'}] },{n:'schemeId',t:'text'},{n:'status',t:'select',opts:['DISCOVERED','IN_PROGRESS','SUBMITTED','APPROVED','REJECTED']},{n:'matchConfidence',t:'number',l:'Confidence (0-1)'}] },
   goals:              { label: 'Goals',               columns: ['title','category','status','progress'], createFields: [{n:'title',t:'text'},{n:'description',t:'textarea'},{n:'category',t:'select',opts:['FUNDING','GROWTH','COMPLIANCE','HIRING','PRODUCT']},{n:'status',t:'select',opts:['ACTIVE','COMPLETED','PAUSED','CANCELLED']},{n:'businessId',t:'text',l:'Business ID'}] },
   actions:            { label: 'Actions',             columns: ['title','type','status','priority'], createFields: [{n:'title',t:'text'},{n:'type',t:'text'},{n:'status',t:'select',opts:['PENDING','IN_PROGRESS','COMPLETED','BLOCKED']},{n:'priority',t:'select',opts:['LOW','MEDIUM','HIGH','CRITICAL']},{n:'businessId',t:'text',l:'Business ID'}] },
   recommendations:    { label: 'Recommendations',     columns: ['title','category','status','urgencyScore'], createFields: [{n:'title',t:'text'},{n:'description',t:'textarea'},{n:'category',t:'text'},{n:'status',t:'select',opts:['ACTIVE','ACCEPTED','DISMISSED','EXPIRED']},{n:'businessId',t:'text',l:'Business ID'}] },
@@ -543,3 +543,8 @@ renderDashboard();
 </script>
 </body>
 </html>`;
+
+
+
+
+

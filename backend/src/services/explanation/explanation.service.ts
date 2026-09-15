@@ -1,6 +1,6 @@
 import { prisma } from '../../db.js';
 import { EntrepreneurIntent, Business } from '@prisma/client';
-import { ScoredScheme } from '../search/hybrid-search.service.js';
+import { ScoredOpportunity } from '../search/hybrid-search.service.js';
 import { HardEligibilityEngine } from '../eligibility/hard-eligibility.service.js';
 
 export class ExplanationService {
@@ -10,14 +10,14 @@ export class ExplanationService {
   static async generateMatchResult(
     intent: EntrepreneurIntent,
     business: Business,
-    scheme: ScoredScheme
+    opportunity: ScoredOpportunity
   ) {
-    const eligibility = HardEligibilityEngine.evaluate(scheme, intent, business);
+    const eligibility = HardEligibilityEngine.evaluate(opportunity, intent, business);
     
     // Calculate Relevance Level (Semantic)
     let relevanceLevel = 'LOW';
-    if (scheme.semanticScore > 0.8) relevanceLevel = 'HIGH';
-    else if (scheme.semanticScore > 0.5) relevanceLevel = 'MODERATE';
+    if (opportunity.semanticScore > 0.8) relevanceLevel = 'HIGH';
+    else if (opportunity.semanticScore > 0.5) relevanceLevel = 'MODERATE';
 
     // Override relevance if hard eligibility fails completely
     if (eligibility.status === 'NOT_ELIGIBLE') {
@@ -38,23 +38,23 @@ export class ExplanationService {
 
     // Provenance formatting
     const provenance = {
-      source: scheme.sourceOrganization || 'Government Portal',
-      url: scheme.officialUrl,
-      tier: scheme.sourceTier || 'UNKNOWN',
-      version: scheme.sourceVersion || '1.0',
-      dataStatus: scheme.dataStatus,
-      lastChecked: scheme.lastVerifiedAt
+      source: opportunity.sourceOrganization || 'Government Portal',
+      url: opportunity.officialUrl,
+      tier: opportunity.sourceTier || 'UNKNOWN',
+      version: opportunity.sourceVersion || '1.0',
+      dataStatus: opportunity.dataStatus,
+      lastChecked: opportunity.lastVerifiedAt
     };
 
-    return await prisma.schemeMatchResult.upsert({
+    return await prisma.opportunityMatchResult.upsert({
       where: {
-        intentId_schemeId: {
+        intentId_opportunityId: {
           intentId: intent.id,
-          schemeId: scheme.id
+          opportunityId: opportunity.id
         }
       },
       update: {
-        semanticScore: scheme.semanticScore,
+        semanticScore: opportunity.semanticScore,
         relevanceLevel,
         eligibilityStatus: eligibility.status,
         confidenceLevel,
@@ -62,14 +62,14 @@ export class ExplanationService {
         missingInfo: JSON.stringify(eligibility.missingInfo),
         evidenceReadiness: JSON.stringify(evidenceReadiness),
         provenance: JSON.stringify(provenance),
-        applicationRoute: scheme.officialUrl,
-        discoveryMethod: scheme.semanticScore > 0 ? 'HYBRID' : 'KEYWORD'
+        applicationRoute: opportunity.officialUrl,
+        discoveryMethod: opportunity.semanticScore > 0 ? 'HYBRID' : 'KEYWORD'
       },
       create: {
         intentId: intent.id,
-        schemeId: scheme.id,
+        opportunityId: opportunity.id,
         businessId: business.id,
-        semanticScore: scheme.semanticScore,
+        semanticScore: opportunity.semanticScore,
         relevanceLevel,
         eligibilityStatus: eligibility.status,
         confidenceLevel,
@@ -77,8 +77,8 @@ export class ExplanationService {
         missingInfo: JSON.stringify(eligibility.missingInfo),
         evidenceReadiness: JSON.stringify(evidenceReadiness),
         provenance: JSON.stringify(provenance),
-        applicationRoute: scheme.officialUrl,
-        discoveryMethod: scheme.semanticScore > 0 ? 'HYBRID' : 'KEYWORD'
+        applicationRoute: opportunity.officialUrl,
+        discoveryMethod: opportunity.semanticScore > 0 ? 'HYBRID' : 'KEYWORD'
       }
     });
   }

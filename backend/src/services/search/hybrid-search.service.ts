@@ -1,8 +1,8 @@
 import { prisma } from '../../db.js';
 import { getEmbeddingProvider } from '../embedding/index.js';
-import { EntrepreneurIntent, GovernmentScheme } from '@prisma/client';
+import { EntrepreneurIntent, Opportunity } from '@prisma/client';
 
-export interface ScoredScheme extends GovernmentScheme {
+export interface ScoredOpportunity extends Opportunity {
   semanticScore: number;
 }
 
@@ -25,41 +25,41 @@ export class HybridSearchService {
   }
 
   /**
-   * Performs a semantic search for schemes matching the intent's raw query.
+   * Performs a semantic search for opportunitys matching the intent's raw query.
    * This is the "discovery" phase before hard eligibility filtering.
    */
-  static async discoverCandidates(intent: EntrepreneurIntent, limit: number = 10): Promise<ScoredScheme[]> {
+  static async discoverCandidates(intent: EntrepreneurIntent, limit: number = 10): Promise<ScoredOpportunity[]> {
     const provider = getEmbeddingProvider();
     const queryVector = await provider.embed(intent.rawQuery);
     const modelName = provider.getModelName();
 
     // Fetch all CURRENT embeddings for this model
-    const embeddings = await prisma.schemeEmbedding.findMany({
+    const embeddings = await prisma.opportunityEmbedding.findMany({
       where: { 
         embeddingModel: modelName,
         status: 'CURRENT'
       },
-      include: { scheme: true }
+      include: { opportunity: true }
     });
 
-    // If no embeddings exist, fallback to returning all active schemes with score 0
+    // If no embeddings exist, fallback to returning all active opportunitys with score 0
     if (embeddings.length === 0) {
-      const allActive = await prisma.governmentScheme.findMany({ where: { status: 'ACTIVE' }, take: limit });
+      const allActive = await prisma.opportunity.findMany({ where: { status: 'ACTIVE' }, take: limit });
       return allActive.map(s => ({ ...s, semanticScore: 0 }));
     }
 
     // Compute similarity in-memory (scales well up to ~10,000 items, perfect for SIH)
     const scoredCandidates = embeddings.map(emb => {
-      let schemeVector: number[];
+      let opportunityVector: number[];
       try {
-        schemeVector = JSON.parse(emb.embeddingVector);
+        opportunityVector = JSON.parse(emb.embeddingVector);
       } catch (e) {
-        schemeVector = new Array(provider.getDimensions()).fill(0);
+        opportunityVector = new Array(provider.getDimensions()).fill(0);
       }
       
-      const score = this.cosineSimilarity(queryVector, schemeVector);
+      const score = this.cosineSimilarity(queryVector, opportunityVector);
       return {
-        ...emb.scheme,
+        ...emb.opportunity,
         semanticScore: score
       };
     });

@@ -11,7 +11,7 @@ import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import organizationsRouter from './routes/organizations.js';
 import contextEngineRouter from './routes/contextEngine.js';
-import schemeMatcherRouter from './routes/government-scheme-matching-accuracy.js';
+import schemeMatcherRouter from './routes/opportunity-discovery.js';
 import nbaRouter from './routes/nba.js';
 import businessHealthRouter from './routes/businessHealth.js';
 import forecastsRouter from './routes/forecasts.js';
@@ -50,7 +50,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/organizations', organizationsRouter);
 app.use('/api/context', contextEngineRouter);
-app.use('/api/schemes/match', requireAuth, schemeMatcherRouter);
+app.use('/api/opportunities', requireAuth, schemeMatcherRouter);
 app.use('/api/nba', requireAuth, nbaRouter);
 app.use('/api/health-engine', businessHealthRouter);
 app.use('/api/forecasts', requireAuth, forecastsRouter);
@@ -98,3 +98,5 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;
+
+

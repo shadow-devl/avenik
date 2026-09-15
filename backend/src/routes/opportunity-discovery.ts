@@ -4,7 +4,7 @@ import { ContextService } from '../services/context.service.js';
 import { IntentExtractionService } from '../services/intent/intent-extraction.service.js';
 import { HybridSearchService } from '../services/search/hybrid-search.service.js';
 import { ExplanationService } from '../services/explanation/explanation.service.js';
-import { SchemeEmbeddingService } from '../services/embedding/scheme-embedding.service.js';
+import { OpportunityEmbeddingService } from '../services/embedding/opportunity-embedding.service.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -23,7 +23,7 @@ router.post('/discover', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 1. Context Authorization
-    await ContextService.resolve({ userId: req.user.userId, requestedBusinessId: businessId });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
     const business = await prisma.business.findUnique({ where: { id: businessId } });
     if (!business) {
       res.status(404).json({ success: false, error: 'Business not found' });
@@ -38,8 +38,8 @@ router.post('/discover', async (req: Request, res: Response): Promise<void> => {
 
     // 4. Hard Eligibility & Explanation Scoring
     const results = [];
-    for (const scheme of candidates) {
-      const matchResult = await ExplanationService.generateMatchResult(intent, business, scheme);
+    for (const opportunity of candidates) {
+      const matchResult = await ExplanationService.generateMatchResult(intent, business, opportunity);
       results.push(matchResult);
     }
 
@@ -64,13 +64,13 @@ router.post('/discover', async (req: Request, res: Response): Promise<void> => {
 router.post('/admin/embed-all', async (req: Request, res: Response): Promise<void> => {
   try {
     // Basic protection - should use proper roles
-    const context = await ContextService.resolve({ userId: req.user.userId });
+    const context = await ContextService.resolve({ userId: req.user!.userId });
     if (!context.permissions.includes('ALL')) {
       res.status(403).json({ success: false, error: 'Requires ADMIN role' });
       return;
     }
 
-    const result = await SchemeEmbeddingService.embedAllSchemes();
+    const result = await OpportunityEmbeddingService.embedAllOpportunitys();
     res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -89,16 +89,16 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    await ContextService.resolve({ userId: req.user.userId, requestedBusinessId: businessId });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
 
-    const activeSchemes = await prisma.governmentScheme.findMany({
+    const activeOpportunitys = await prisma.opportunity.findMany({
       where: { status: 'ACTIVE' }
     });
 
     const applications = [];
 
-    for (const scheme of activeSchemes) {
-      const titleLower = scheme.title.toLowerCase();
+    for (const opportunity of activeOpportunitys) {
+      const titleLower = opportunity.title.toLowerCase();
       
       let confidence = 0.0;
       let missingEvidence = 'Business Registration, Identity Proof';
@@ -114,9 +114,9 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
       }
 
       if (isMatch) {
-        const application = await prisma.schemeApplication.upsert({
+        const application = await prisma.opportunityEngagement.upsert({
           where: {
-            businessId_schemeId: { businessId, schemeId: scheme.id }
+            businessId_opportunityId: { businessId, opportunityId: opportunity.id }
           },
           update: {
             matchConfidence: confidence,
@@ -125,7 +125,7 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
           },
           create: {
             businessId,
-            schemeId: scheme.id,
+            opportunityId: opportunity.id,
             matchConfidence: confidence,
             missingEvidence,
             status: 'DISCOVERED'
@@ -135,9 +135,9 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    const savedMatches = await prisma.schemeApplication.findMany({
+    const savedMatches = await prisma.opportunityEngagement.findMany({
       where: { businessId },
-      include: { scheme: true }
+      include: { opportunity: true }
     });
 
     res.json({ success: true, data: savedMatches });
@@ -151,14 +151,14 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
  */
 router.get('/matches/:businessId', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { businessId } = req.params;
+    const businessId = req.params.businessId as string;
     
-    await ContextService.resolve({ userId: req.user.userId, requestedBusinessId: businessId });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
 
     // Return Track 1 Match Results instead of legacy applications if they exist
-    const track1Results = await prisma.schemeMatchResult.findMany({
+    const track1Results = await prisma.opportunityMatchResult.findMany({
       where: { businessId },
-      include: { scheme: true, intent: true },
+      include: { opportunity: true, intent: true },
       orderBy: { semanticScore: 'desc' }
     });
 
@@ -167,20 +167,20 @@ router.get('/matches/:businessId', async (req: Request, res: Response): Promise<
       const mapped = track1Results.map(r => ({
         id: r.id,
         businessId: r.businessId,
-        schemeId: r.schemeId,
+        opportunityId: r.opportunityId,
         status: r.eligibilityStatus,
         matchConfidence: r.semanticScore || 0,
         missingEvidence: JSON.parse(r.missingInfo || '[]').join(', '),
-        scheme: r.scheme,
+        opportunity: (r as any).opportunity,
         isTrack1: true
       }));
       res.json({ success: true, data: mapped });
       return;
     }
 
-    const legacyMatches = await prisma.schemeApplication.findMany({
+    const legacyMatches = await prisma.opportunityEngagement.findMany({
       where: { businessId },
-      include: { scheme: true }
+      include: { opportunity: true }
     });
 
     res.json({ success: true, data: legacyMatches });
@@ -190,3 +190,6 @@ router.get('/matches/:businessId', async (req: Request, res: Response): Promise<
 });
 
 export default router;
+
+
+

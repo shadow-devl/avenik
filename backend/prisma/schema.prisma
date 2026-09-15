@@ -207,9 +207,9 @@ model Business {
   earlyWarnings      EarlyWarning[]
   forecasts          Forecast[]
   financialRecords   FinancialRecord[]
-  schemeApplications SchemeApplication[]
+  opportunityEngagements OpportunityEngagement[]
   intents            EntrepreneurIntent[]
-  schemeMatchResults SchemeMatchResult[]
+  opportunityMatchResults OpportunityMatchResult[]
   risks              Risk[]
   documents          Document[]
   trustProfile       TrustProfile?
@@ -459,66 +459,7 @@ model FinancialRecord {
 
 // T. GOVERNMENT SUPPORT EXECUTION
 // -----------------------------------------
-model GovernmentScheme {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title            String
-  department       String
-  description      String    @db.Text
-  eligibilityRules String    @map("eligibility_rules") @db.Text
-  benefits         String    @db.Text
-  officialUrl      String?   @map("official_url")
-  deadline         DateTime? @db.Timestamptz
-  status           String    @default("ACTIVE") // ACTIVE, EXPIRED, PAUSED, INACTIVE
-  lastVerifiedAt   DateTime  @default(now()) @map("last_verified_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Track 1: Semantic Intelligence fields
-  sector              String?   @map("sector")
-  targetBeneficiaries String?   @map("target_beneficiaries") @db.Text
-  supportType         String?   @map("support_type")       // LOAN, GRANT, SUBSIDY, INCUBATION, TRAINING, MARKET_ACCESS
-  businessStage       String?   @map("business_stage")     // IDEA, STARTUP, GROWTH, ESTABLISHED
-  geographicScope     String?   @map("geographic_scope")   // NATIONAL, STATE, DISTRICT
-  maxFundingAmount    Float?    @map("max_funding_amount")
-  minFundingAmount    Float?    @map("min_funding_amount")
-  sourceOrganization  String?   @map("source_organization")
-  sourceTier          String?   @map("source_tier")        // CENTRAL_GOV, STATE_GOV, PSU, PRIVATE
-  sourceVersion       String?   @map("source_version")
-  lastCheckedAt       DateTime? @map("last_checked_at") @db.Timestamptz
-  dataStatus          String    @default("CURRENT") @map("data_status") // CURRENT, STALE, SOURCE_UNAVAILABLE, CONFLICT, UNKNOWN
-  keywords            String?   @map("keywords") @db.Text  // comma-separated searchable keywords
-  isDemo              Boolean   @default(true) @map("is_demo")
-
-  applications SchemeApplication[]
-  embeddings   SchemeEmbedding[]
-  matchResults SchemeMatchResult[]
-
-  @@index([status])
-  @@index([sector])
-  @@index([supportType])
-  @@index([dataStatus])
-  @@map("government_schemes")
-}
-
-model SchemeEmbedding {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  schemeId         String   @map("scheme_id") @db.Uuid
-  embeddingModel   String   @map("embedding_model")    // e.g. "text-embedding-004", "keyword-tfidf-v1"
-  embeddingVersion String   @map("embedding_version")  // e.g. "1.0.0"
-  contentHash      String   @map("content_hash")       // SHA-256 of the source document
-  embeddingVector  String   @map("embedding_vector") @db.Text  // JSON array of floats
-  dimensions       Int      @default(768)
-  status           String   @default("CURRENT") // CURRENT, STALE, FAILED
-  sourceDocument   String   @map("source_document") @db.Text  // the canonical text that was embedded
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  scheme GovernmentScheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
-
-  @@unique([schemeId, embeddingModel])
-  @@index([status])
-  @@index([contentHash])
-  @@map("scheme_embeddings")
-}
 
 model EntrepreneurIntent {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -537,57 +478,14 @@ model EntrepreneurIntent {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   business     Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  matchResults SchemeMatchResult[]
+  matchResults OpportunityMatchResult[]
 
   @@index([businessId])
   @@index([confirmationStatus])
   @@map("entrepreneur_intents")
 }
 
-model SchemeMatchResult {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  intentId          String   @map("intent_id") @db.Uuid
-  schemeId          String   @map("scheme_id") @db.Uuid
-  businessId        String   @map("business_id") @db.Uuid
-  semanticScore     Float?   @map("semantic_score")           // raw cosine similarity 0-1
-  relevanceLevel    String   @map("relevance_level")          // HIGH, MODERATE, LOW
-  eligibilityStatus String   @map("eligibility_status")       // ELIGIBLE, NOT_ELIGIBLE, POTENTIALLY_ELIGIBLE, INSUFFICIENT_INFORMATION, REVIEW_REQUIRED
-  confidenceLevel   String   @map("confidence_level")         // HIGH, MODERATE, LOW
-  reasons           String   @map("reasons") @db.Text         // JSON array of reason strings
-  missingInfo       String?  @map("missing_info") @db.Text    // JSON array of missing fields
-  evidenceReadiness String?  @map("evidence_readiness") @db.Text // JSON: {required: [], provided: [], missing: []}
-  provenance        String   @map("provenance") @db.Text      // JSON: {source, url, tier, version, dataStatus, lastChecked}
-  applicationRoute  String?  @map("application_route")        // official application URL
-  discoveryMethod   String   @default("HYBRID") @map("discovery_method") // SEMANTIC, KEYWORD, HYBRID, HEURISTIC
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  intent   EntrepreneurIntent @relation(fields: [intentId], references: [id], onDelete: Cascade)
-  scheme   GovernmentScheme   @relation(fields: [schemeId], references: [id], onDelete: Cascade)
-  business Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@unique([intentId, schemeId])
-  @@index([businessId])
-  @@index([relevanceLevel])
-  @@map("scheme_match_results")
-}
-
-model SchemeApplication {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId      String    @map("business_id") @db.Uuid
-  schemeId        String    @map("scheme_id") @db.Uuid
-  status          String    @default("DISCOVERED") // DISCOVERED, PREPARING, SUBMITTED, APPROVED, REJECTED
-  matchConfidence Float?    @map("match_confidence") // 0.0 - 1.0 AI matching
-  missingEvidence String?   @map("missing_evidence") @db.Text
-  appliedAt       DateTime? @map("applied_at") @db.Timestamptz
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  business Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  scheme   GovernmentScheme @relation(fields: [schemeId], references: [id], onDelete: Restrict)
-
-  @@unique([businessId, schemeId])
-  @@map("scheme_applications")
-}
 
 // -----------------------------------------
 // AE. RISK & RESILIENCE
@@ -825,3 +723,159 @@ model FraudCase {
   @@index([businessId, status])
   @@map("fraud_cases")
 }
+
+
+enum OpportunityType {
+  GOVERNMENT_SUPPORT
+  GRANT
+  SUBSIDY
+  LOAN
+  INVESTMENT
+  LENDER
+  INCUBATION
+  ACCELERATION
+  MENTORSHIP
+  ADVISORY
+  PARTNERSHIP
+  SUPPLIER
+  DISTRIBUTORS
+  CUSTOMER
+  PROCUREMENT
+  TENDER
+  CORPORATE_PROGRAM
+  RESEARCH
+  UNIVERSITY
+  TECHNOLOGY
+  MARKET_ENTRY
+  EXPORT
+  IMPORT
+  TRAINING
+  SERVICE
+  LICENSING
+  IP
+  OTHER
+}
+
+model Opportunity {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title             String
+  type              OpportunityType @default(GOVERNMENT_SUPPORT)
+  department        String?  // Kept for backward compatibility with scheme department
+  providerName      String?  @map("provider_name")
+  description       String   @db.Text
+  eligibilityRules  String   @map("eligibility_rules") @db.Text
+  benefits          String   @db.Text
+  officialUrl       String?  @map("official_url")
+  status            String   @default("ACTIVE") // ACTIVE, EXPIRED, PAUSED, INACTIVE
+  lastVerifiedAt    DateTime @default(now()) @map("last_verified_at") @db.Timestamptz
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  
+  // Track 1 & 1.1 Semantic metadata
+  sector            String?
+  targetBeneficiaries String? @map("target_beneficiaries") @db.Text
+  supportType       String?  @map("support_type")
+  businessStage     String?  @map("business_stage")
+  geographicScope   String?  @map("geographic_scope")
+  keywords          String?  @db.Text
+  isDemo            Boolean  @default(true) @map("is_demo")
+
+  // Track 1.1 Global Geographic Intelligence
+  country           String?
+  region            String?
+  city              String?
+  
+  // Track 1.1 Freshness & Source
+  sourceOrganization String?  @map("source_organization")
+  sourceTier        String?  @map("source_tier")
+  sourceVersion     String?  @map("source_version")
+  dataStatus        String   @default("CURRENT") @map("data_status")
+  effectiveFrom     DateTime? @map("effective_from") @db.Timestamptz
+  expiresAt         DateTime? @map("expires_at") @db.Timestamptz
+  lastCheckedAt     DateTime? @map("last_checked_at") @db.Timestamptz
+
+  maxFundingAmount  Float?    @map("max_funding_amount")
+  minFundingAmount  Float?    @map("min_funding_amount")
+
+  engagements       OpportunityEngagement[]
+  embeddings        OpportunityEmbedding[]
+  matchResults      OpportunityMatchResult[]
+
+  @@index([status])
+  @@index([sector])
+  @@index([type])
+  @@index([country])
+  @@map("opportunities")
+}
+
+model OpportunityEngagement {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId        String   @map("business_id") @db.Uuid
+  opportunityId     String   @map("opportunity_id") @db.Uuid
+  
+  // DISCOVERED, SCREENED, RELEVANT, INVESTIGATING, QUALIFIED, PURSUING, ENGAGED, NEGOTIATING, WON, LOST, EXPIRED, DISMISSED
+  status            String   @default("DISCOVERED") 
+  
+  matchConfidence   Float?   @map("match_confidence") // 0.0 - 1.0 AI matching
+  missingEvidence   String?  @map("missing_evidence") @db.Text
+  appliedAt         DateTime? @map("applied_at") @db.Timestamptz
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  opportunity       Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, opportunityId])
+  @@map("opportunity_engagements")
+}
+
+model OpportunityEmbedding {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  opportunityId    String   @map("opportunity_id") @db.Uuid
+  embeddingModel   String   @map("embedding_model")
+  embeddingVersion String   @map("embedding_version")
+  contentHash      String   @map("content_hash")
+  embeddingVector  String   @map("embedding_vector") @db.Text
+  dimensions       Int      @default(768)
+  status           String   @default("CURRENT")
+  sourceDocument   String   @map("source_document") @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  opportunity      Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, embeddingModel])
+  @@index([status])
+  @@index([contentHash])
+  @@map("opportunity_embeddings")
+}
+
+model OpportunityMatchResult {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  intentId          String   @map("intent_id") @db.Uuid
+  opportunityId     String   @map("opportunity_id") @db.Uuid
+  businessId        String   @map("business_id") @db.Uuid
+  
+  semanticScore     Float?   @map("semantic_score")
+  relevanceLevel    String   @map("relevance_level")
+  eligibilityStatus String   @map("eligibility_status") 
+  confidenceLevel   String   @map("confidence_level")
+  reasons           String   @map("reasons") @db.Text
+  missingInfo       String?  @map("missing_info") @db.Text
+  evidenceReadiness String?  @map("evidence_readiness") @db.Text
+  provenance        String   @map("provenance") @db.Text
+  applicationRoute  String?  @map("application_route")
+  discoveryMethod   String   @default("HYBRID") @map("discovery_method")
+  
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  intent            EntrepreneurIntent @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  opportunity       Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  business          Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([intentId, opportunityId])
+  @@index([businessId])
+  @@index([relevanceLevel])
+  @@map("opportunity_match_results")
+}
+

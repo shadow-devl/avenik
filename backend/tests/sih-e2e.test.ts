@@ -57,7 +57,7 @@ describe('SIH Phase 2 E2E Demonstration', () => {
 
   it('4-11. Scheme Matching Engine returns explained results', async () => {
     const res = await request(app)
-      .post('/api/schemes/match/match')
+      .post('/api/opportunities/match')
       .set('Authorization', `Bearer ${authToken}`)
       .send({ businessId, filters: { industry: 'Tech', marginalizationStatus: true } });
     
@@ -85,3 +85,4 @@ describe('SIH Phase 2 E2E Demonstration', () => {
     expect(typeof res.body.data.healthScore).toBe('number');
   }, 15000);
 });
+
