@@ -24,28 +24,27 @@ export default {
         // For the sake of the demo and edge compatibility, we mock the return or we should fetch via standard `fetch()` to our backend.
         
         try {
-          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/auth/login", {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const res = await fetch(`${baseUrl}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials)
           });
           const data = await res.json();
-          if (data.success && data.user) {
-            return data.user;
+          if (res.ok && data.success && data.data?.user) {
+            return {
+              id: data.data.user.id,
+              email: data.data.user.email,
+              name: data.data.user.name,
+              roles: data.data.user.roles || ["ENTREPRENEUR"],
+              token: data.data.token,
+            };
           }
+          return null;
         } catch(e) {
-          // fallback mock for now
+          console.error("Auth fetch error:", e);
+          return null;
         }
-        
-        if (credentials.password === "password") { 
-          return {
-            id: "mock-id-1",
-            email: credentials.email as string,
-            name: "Demo User",
-            roles: ["ENTREPRENEUR"],
-          };
-        }
-        return null;
       },
     }),
   ],
@@ -58,6 +57,7 @@ export default {
       if (user) {
         token.id = user.id;
         token.roles = (user as any).roles || ["ENTREPRENEUR"];
+        token.backendToken = (user as any).token;
       }
       return token;
     },
@@ -65,6 +65,7 @@ export default {
       if (token && session.user) {
         session.user.id = token.id as string;
         (session.user as any).roles = token.roles;
+        (session.user as any).token = token.backendToken;
       }
       return session;
     },

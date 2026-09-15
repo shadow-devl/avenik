@@ -26,10 +26,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-slate-950 text-slate-50 antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+      <body className={`${inter.className} bg-slate-950 text-slate-50 antialiased`} style={{ backgroundImage: "url('/background.png')", backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
+        <div className="min-h-screen bg-slate-950/80 backdrop-blur-[2px]">
+          <Providers>
+            {children}
+          </Providers>
+        </div>
       </body>
     </html>
   );

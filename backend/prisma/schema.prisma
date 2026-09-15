@@ -46,6 +46,7 @@ model User {
   email         String?    @unique
   emailVerified DateTime?  @map("email_verified") @db.Timestamptz
   image         String?    @map("profile_image")
+  passwordHash  String?    @map("password_hash")
   countryCode   String?    @map("country_code") @db.Char(2)
   status        UserStatus @default(PENDING)
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz

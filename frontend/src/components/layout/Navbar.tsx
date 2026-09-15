@@ -5,8 +5,8 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-xl font-bold tracking-tight">
-          <span className="text-blue-400">A</span>venik
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <img src="/logo.jpg" alt="Avenik Logo" className="h-8 w-auto rounded" />
         </Link>
         <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
