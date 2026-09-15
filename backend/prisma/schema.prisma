@@ -66,6 +66,7 @@ model User {
   targetRelationships EcosystemRelationship[] @relation("UserRelationships")
   trustProfile        TrustProfile?
   EcosystemMessage    EcosystemMessage[]
+  EntrepreneurDigitalTwin EntrepreneurDigitalTwin[]
 
   @@index([email])
   @@index([countryCode])
@@ -226,6 +227,12 @@ model Business {
   GrowthScenario          GrowthScenario[]
   ProactiveInsight        ProactiveInsight[]
   AgentExecution          AgentExecution[]
+
+  // Phase 12 Relations
+  EntrepreneurDigitalTwin EntrepreneurDigitalTwin[]
+  AnomalyDetection        AnomalyDetection[]
+  InnovationRecord        InnovationRecord[]
+  GovernancePolicy        GovernancePolicy[]
 
   @@index([ownerUserId])
   @@index([organizationId])
@@ -1052,4 +1059,107 @@ model OpportunityMatchResult {
   @@index([businessId])
   @@index([relevanceLevel])
   @@map("opportunity_match_results")
+}
+
+// ── Phase 12: Global Intelligent Entrepreneurial Platform Maturity ──
+
+// 12.1 — Entrepreneur Digital Twin & Personal Intelligence
+model EntrepreneurDigitalTwin {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  businessId        String   @map("business_id") @db.Uuid
+  goals             Json     @default("[]") @db.JsonB
+  priorities        Json     @default("[]") @db.JsonB
+  capabilities      Json     @default("[]") @db.JsonB
+  capabilityGaps    Json     @default("[]") @map("capability_gaps") @db.JsonB
+  preferences       Json     @default("{}") @db.JsonB
+  learningObjectives Json    @default("[]") @map("learning_objectives") @db.JsonB
+  activeWorkContext Json     @default("{}") @map("active_work_context") @db.JsonB
+  personalizedGuidance Json  @default("[]") @map("personalized_guidance") @db.JsonB
+  lastSyncedAt      DateTime @default(now()) @map("last_synced_at") @db.Timestamptz
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+  @@index([userId])
+  @@index([businessId])
+  @@map("entrepreneur_digital_twins")
+}
+
+// 12.2 — Anomaly Detection & Prescriptive Intelligence
+model AnomalyDetection {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String   @map("business_id") @db.Uuid
+  domain        String   // REVENUE, EXPENSE, CUSTOMER, OPERATIONS, SUPPLY_CHAIN, WORKFORCE, MARKET
+  metric        String
+  expectedValue Float    @map("expected_value")
+  actualValue   Float    @map("actual_value")
+  deviationPct  Float    @map("deviation_pct")
+  severity      String   @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+  status        String   @default("DETECTED") // DETECTED, INVESTIGATING, RESOLVED, DISMISSED
+  rootCause     String?  @map("root_cause") @db.Text
+  prescription  Json?    @db.JsonB // { options: [], tradeOffs: [], recommendation: string }
+  detectedAt    DateTime @default(now()) @map("detected_at") @db.Timestamptz
+  resolvedAt    DateTime? @map("resolved_at") @db.Timestamptz
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([domain])
+  @@index([severity])
+  @@map("anomaly_detections")
+}
+
+// 12.7 — Innovation, Research & Intellectual Capital
+model InnovationRecord {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String    @map("business_id") @db.Uuid
+  type          String    // IDEA, HYPOTHESIS, EXPERIMENT, PROTOTYPE, PATENT, TRADEMARK, COPYRIGHT, TRADE_SECRET, RESEARCH
+  title         String
+  description   String?   @db.Text
+  status        String    @default("DRAFT") // DRAFT, ACTIVE, VALIDATED, FAILED, PROTECTED, ARCHIVED
+  hypothesis    String?   @db.Text
+  result        String?   @db.Text
+  learning      String?   @db.Text
+  metadata      Json      @default("{}") @db.JsonB // flexible per-type metadata
+  provenance    String    @default("USER_REPORTED")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+  @@map("innovation_records")
+}
+
+// 12.8 — Trust, Risk, Resilience, Governance & Responsible AI
+model GovernancePolicy {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  domain          String   // RISK, RESILIENCE, TRUST, FRAUD, SECURITY, PRIVACY, AI, AGENT, LEGAL, SUSTAINABILITY
+  policyName      String   @map("policy_name")
+  description     String?  @db.Text
+  controlType     String   @default("MANUAL") @map("control_type") // MANUAL, AUTOMATED, HYBRID
+  owner           String?
+  status          String   @default("ACTIVE") // ACTIVE, DRAFT, REVIEW, ARCHIVED, EXCEPTION
+  evidenceRequired Boolean @default(false) @map("evidence_required")
+  reviewFrequency String?  @map("review_frequency") // DAILY, WEEKLY, MONTHLY, QUARTERLY, ANNUAL
+  lastReviewedAt  DateTime? @map("last_reviewed_at") @db.Timestamptz
+  nextReviewAt    DateTime? @map("next_review_at") @db.Timestamptz
+  riskLevel       String   @default("MEDIUM") @map("risk_level") // LOW, MEDIUM, HIGH, CRITICAL
+  mitigations     Json     @default("[]") @db.JsonB
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([domain])
+  @@index([status])
+  @@map("governance_policies")
 }
