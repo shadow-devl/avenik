@@ -208,6 +208,8 @@ model Business {
   forecasts          Forecast[]
   financialRecords   FinancialRecord[]
   schemeApplications SchemeApplication[]
+  intents            EntrepreneurIntent[]
+  schemeMatchResults SchemeMatchResult[]
   risks              Risk[]
   documents          Document[]
   trustProfile       TrustProfile?
@@ -455,7 +457,6 @@ model FinancialRecord {
   @@map("financial_records")
 }
 
-// -----------------------------------------
 // T. GOVERNMENT SUPPORT EXECUTION
 // -----------------------------------------
 model GovernmentScheme {
@@ -467,14 +468,107 @@ model GovernmentScheme {
   benefits         String    @db.Text
   officialUrl      String?   @map("official_url")
   deadline         DateTime? @db.Timestamptz
-  status           String    @default("ACTIVE") // ACTIVE, EXPIRED, PAUSED
+  status           String    @default("ACTIVE") // ACTIVE, EXPIRED, PAUSED, INACTIVE
   lastVerifiedAt   DateTime  @default(now()) @map("last_verified_at") @db.Timestamptz
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
+  // Track 1: Semantic Intelligence fields
+  sector              String?   @map("sector")
+  targetBeneficiaries String?   @map("target_beneficiaries") @db.Text
+  supportType         String?   @map("support_type")       // LOAN, GRANT, SUBSIDY, INCUBATION, TRAINING, MARKET_ACCESS
+  businessStage       String?   @map("business_stage")     // IDEA, STARTUP, GROWTH, ESTABLISHED
+  geographicScope     String?   @map("geographic_scope")   // NATIONAL, STATE, DISTRICT
+  maxFundingAmount    Float?    @map("max_funding_amount")
+  minFundingAmount    Float?    @map("min_funding_amount")
+  sourceOrganization  String?   @map("source_organization")
+  sourceTier          String?   @map("source_tier")        // CENTRAL_GOV, STATE_GOV, PSU, PRIVATE
+  sourceVersion       String?   @map("source_version")
+  lastCheckedAt       DateTime? @map("last_checked_at") @db.Timestamptz
+  dataStatus          String    @default("CURRENT") @map("data_status") // CURRENT, STALE, SOURCE_UNAVAILABLE, CONFLICT, UNKNOWN
+  keywords            String?   @map("keywords") @db.Text  // comma-separated searchable keywords
+  isDemo              Boolean   @default(true) @map("is_demo")
+
   applications SchemeApplication[]
+  embeddings   SchemeEmbedding[]
+  matchResults SchemeMatchResult[]
 
   @@index([status])
+  @@index([sector])
+  @@index([supportType])
+  @@index([dataStatus])
   @@map("government_schemes")
+}
+
+model SchemeEmbedding {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schemeId         String   @map("scheme_id") @db.Uuid
+  embeddingModel   String   @map("embedding_model")    // e.g. "text-embedding-004", "keyword-tfidf-v1"
+  embeddingVersion String   @map("embedding_version")  // e.g. "1.0.0"
+  contentHash      String   @map("content_hash")       // SHA-256 of the source document
+  embeddingVector  String   @map("embedding_vector") @db.Text  // JSON array of floats
+  dimensions       Int      @default(768)
+  status           String   @default("CURRENT") // CURRENT, STALE, FAILED
+  sourceDocument   String   @map("source_document") @db.Text  // the canonical text that was embedded
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  scheme GovernmentScheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+
+  @@unique([schemeId, embeddingModel])
+  @@index([status])
+  @@index([contentHash])
+  @@map("scheme_embeddings")
+}
+
+model EntrepreneurIntent {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId         String   @map("business_id") @db.Uuid
+  rawQuery           String   @map("raw_query") @db.Text
+  sector             String?
+  industry           String?
+  businessType       String?  @map("business_type")
+  businessStage      String?  @map("business_stage")
+  location           String?
+  state              String?
+  supportNeed        String?  @map("support_need")     // FUNDING, LOAN, GRANT, SUBSIDY, INCUBATION, TRAINING, MARKET_ACCESS
+  fundingNeed        Float?   @map("funding_need")
+  entrepreneurCategory String? @map("entrepreneur_category") // WOMAN, SC_ST, MINORITY, GENERAL
+  confirmationStatus String   @default("AI_INFERRED") @map("confirmation_status") // AI_INFERRED, USER_CONFIRMED
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business     Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  matchResults SchemeMatchResult[]
+
+  @@index([businessId])
+  @@index([confirmationStatus])
+  @@map("entrepreneur_intents")
+}
+
+model SchemeMatchResult {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  intentId          String   @map("intent_id") @db.Uuid
+  schemeId          String   @map("scheme_id") @db.Uuid
+  businessId        String   @map("business_id") @db.Uuid
+  semanticScore     Float?   @map("semantic_score")           // raw cosine similarity 0-1
+  relevanceLevel    String   @map("relevance_level")          // HIGH, MODERATE, LOW
+  eligibilityStatus String   @map("eligibility_status")       // ELIGIBLE, NOT_ELIGIBLE, POTENTIALLY_ELIGIBLE, INSUFFICIENT_INFORMATION, REVIEW_REQUIRED
+  confidenceLevel   String   @map("confidence_level")         // HIGH, MODERATE, LOW
+  reasons           String   @map("reasons") @db.Text         // JSON array of reason strings
+  missingInfo       String?  @map("missing_info") @db.Text    // JSON array of missing fields
+  evidenceReadiness String?  @map("evidence_readiness") @db.Text // JSON: {required: [], provided: [], missing: []}
+  provenance        String   @map("provenance") @db.Text      // JSON: {source, url, tier, version, dataStatus, lastChecked}
+  applicationRoute  String?  @map("application_route")        // official application URL
+  discoveryMethod   String   @default("HYBRID") @map("discovery_method") // SEMANTIC, KEYWORD, HYBRID, HEURISTIC
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  intent   EntrepreneurIntent @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  scheme   GovernmentScheme   @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+  business Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([intentId, schemeId])
+  @@index([businessId])
+  @@index([relevanceLevel])
+  @@map("scheme_match_results")
 }
 
 model SchemeApplication {

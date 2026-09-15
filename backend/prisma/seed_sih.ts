@@ -59,7 +59,7 @@ async function main() {
     }
   });
 
-  // 3. Create Government Schemes (Realistic for India)
+  // 3. Create Government Schemes (Realistic for India) with Track 1 semantic metadata
   const schemes = [
     {
       title: 'Stand-Up India Scheme',
@@ -68,7 +68,12 @@ async function main() {
       eligibilityRules: 'SC/ST and/or woman entrepreneurs, above 18 years of age. Greenfield enterprise only.',
       benefits: 'Bank loan from 10 lakh to 1 crore.',
       officialUrl: 'https://www.standupmitra.in/',
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      sector: 'MANUFACTURING',
+      targetBeneficiaries: 'Women, SC/ST',
+      supportType: 'LOAN',
+      businessStage: 'IDEA',
+      keywords: 'greenfield, women, female, scheduled caste, tribal, bank loan, manufacturing, manufacturing services, trading'
     },
     {
       title: 'Pradhan Mantri Mudra Yojana (PMMY)',
@@ -77,7 +82,12 @@ async function main() {
       eligibilityRules: 'Any Indian Citizen who has a business plan for a non-farm sector income generating activity.',
       benefits: 'Loans under Shishu (up to 50K), Kishore (50K - 5L), and Tarun (5L - 10L).',
       officialUrl: 'https://www.mudra.org.in/',
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      sector: 'RETAIL',
+      targetBeneficiaries: 'General, Small Business, Micro Enterprise',
+      supportType: 'LOAN',
+      businessStage: 'STARTUP',
+      keywords: 'mudra, shishu, kishore, tarun, small business, shop, retail, non-corporate, micro unit'
     },
     {
       title: 'Prime Minister Employment Generation Programme (PMEGP)',
@@ -86,7 +96,12 @@ async function main() {
       eligibilityRules: 'Any individual, above 18 years of age. At least VIII standard pass for projects costing above Rs.10 lakh in the manufacturing sector.',
       benefits: 'Subsidy up to 35% in rural areas for special categories (including women).',
       officialUrl: 'https://www.kviconline.gov.in/pmegpeportal/',
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      sector: 'MANUFACTURING',
+      targetBeneficiaries: 'Rural, Unemployed Youth, Special Categories',
+      supportType: 'SUBSIDY',
+      businessStage: 'IDEA',
+      keywords: 'employment, rural, manufacturing, subsidy, margin money, MSME, KVIC, village industry'
     }
   ];
 
