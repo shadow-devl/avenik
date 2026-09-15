@@ -220,6 +220,10 @@ model Business {
   sourceRelationships     EcosystemRelationship[]   @relation("SourceRelationships")
   targetRelationships     EcosystemRelationship[]   @relation("TargetRelationships")
   CommercialExpansionPlan CommercialExpansionPlan[]
+  CapabilityGap           CapabilityGap[]
+  WorkforceCapacity       WorkforceCapacity[]
+  OperationalRisk         OperationalRisk[]
+  GrowthScenario          GrowthScenario[]
 
   @@index([ownerUserId])
   @@index([organizationId])
@@ -505,6 +509,68 @@ model PricingScenario {
   plan CommercialExpansionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@map("pricing_scenarios")
+}
+
+// -----------------------------------------
+// WORKFORCE & CAPABILITY (PHASE 10.6)
+// -----------------------------------------
+model CapabilityGap {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String   @map("business_id") @db.Uuid
+  skillName     String   @map("skill_name")
+  currentLevel  Int      @map("current_level")
+  requiredLevel Int      @map("required_level")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("capability_gaps")
+}
+
+model WorkforceCapacity {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @map("business_id") @db.Uuid
+  roleName    String   @map("role_name")
+  currentFTE  Float    @map("current_fte")
+  requiredFTE Float    @map("required_fte")
+  overloaded  Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("workforce_capacities")
+}
+
+// -----------------------------------------
+// OPERATIONS & RESILIENCE (PHASE 10.7)
+// -----------------------------------------
+model OperationalRisk {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @map("business_id") @db.Uuid
+  riskArea   String   @map("risk_area")
+  severity   String   @default("LOW") // LOW, MEDIUM, HIGH, CRITICAL
+  mitigated  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("operational_risks")
+}
+
+// -----------------------------------------
+// STRATEGY & SCENARIO (PHASE 10.8)
+// -----------------------------------------
+model GrowthScenario {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String   @map("business_id") @db.Uuid
+  scenarioName     String   @map("scenario_name")
+  projectedRevenue Float    @map("projected_revenue")
+  probability      Float    @default(0.5)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("growth_scenarios")
 }
 
 // T. GOVERNMENT SUPPORT EXECUTION

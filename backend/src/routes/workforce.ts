@@ -1,19 +1,59 @@
-import { Router } from 'express';
-import { requireAuth } from '../middleware/requireAuth.js';
+import { Router, Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.js';
+import { ContextService } from '../services/context.service.js';
+import { WorkforceService } from '../services/workforce/workforce.service.js';
 
 const router = Router();
 
-// GET /api/workforce
-router.get('/', requireAuth, async (req, res, next) => {
-  try {
-    res.json({
-      success: true,
-      message: 'Workforce module loaded successfully',
-      moduleId: '1.95'
-    });
-  } catch (error) {
-    next(error);
-  }
+const CapacitySchema = z.object({
+  body: z.object({
+    businessId: z.string().uuid(),
+    roleName: z.string(),
+    currentFTE: z.number().min(0),
+    requiredFTE: z.number().min(0)
+  })
 });
 
-export default router;
+const GapSchema = z.object({
+  body: z.object({
+    businessId: z.string().uuid(),
+    skillName: z.string(),
+    currentLevel: z.number().min(0).max(5),
+    requiredLevel: z.number().min(0).max(5)
+  })
+});
+
+router.post(
+  '/capacity',
+  validate(CapacitySchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { businessId, roleName, currentFTE, requiredFTE } = req.body;
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
+      const result = await WorkforceService.assessCapacity(businessId, roleName, currentFTE, requiredFTE);
+      res.json({ status: 'success', data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post(
+  '/gap',
+  validate(GapSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { businessId, skillName, currentLevel, requiredLevel } = req.body;
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
+      const result = await WorkforceService.identifyCapabilityGap(businessId, skillName, currentLevel, requiredLevel);
+      res.json({ status: 'success', data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export const workforceRouter = router;
