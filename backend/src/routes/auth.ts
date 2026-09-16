@@ -11,74 +11,49 @@ const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod
 
 router.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many auth attempts' }));
 
-router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/oauth', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password, name, roleCode } = req.body;
-    if (!email || !password || !name) {
-      return error(res, 'Email, password, and name are required', 400);
-    }
-    
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return error(res, 'Email already exists', 400);
+    const { email, name, provider, providerAccountId } = req.body;
+    if (!email) {
+      return error(res, 'Email is required', 400);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Find role
-    const roleCodeTarget = roleCode || 'ENTREPRENEUR';
-    const dbRole = await prisma.role.findUnique({ where: { code: roleCodeTarget } });
-    
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        passwordHash: hashedPassword,
-        roles: dbRole ? {
-          create: {
-            roleId: dbRole.id
-          }
-        } : undefined
-      },
-      include: {
-        roles: { include: { role: true } }
-      }
-    });
+    const dbRole = await prisma.role.findUnique({ where: { code: 'ENTREPRENEUR' } });
 
-    const userRoles = user.roles.map(r => r.role.code);
-    const token = jwt.sign({ userId: user.id, email: user.email, roles: userRoles }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-    
-    return success(res, { user: { id: user.id, email: user.email, name: user.name, roles: userRoles }, token }, 'Registered successfully', 201);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return error(res, 'Email and password are required', 400);
-    }
-
-    const user = await prisma.user.findUnique({ 
+    let user = await prisma.user.findUnique({ 
       where: { email },
       include: { roles: { include: { role: true } } }
     });
-    
-    if (!user || !user.passwordHash) {
-      return error(res, 'Invalid credentials', 401);
-    }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return error(res, 'Invalid credentials', 401);
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || 'User',
+          emailVerified: new Date(),
+          roles: dbRole ? { create: { roleId: dbRole.id } } : undefined
+        },
+        include: { roles: { include: { role: true } } }
+      });
+    } else if (!user.emailVerified) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
+        include: { roles: { include: { role: true } } }
+      });
     }
 
     const userRoles = user.roles.map(r => r.role.code);
-    const token = jwt.sign({ userId: user.id, email: user.email, roles: userRoles }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, roles: userRoles }, 
+      process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod", 
+      { expiresIn: '7d' }
+    );
     
-    return success(res, { user: { id: user.id, email: user.email, name: user.name, roles: userRoles }, token }, 'Logged in successfully', 200);
+    return success(res, { 
+      user: { id: user.id, email: user.email, name: user.name, roles: userRoles }, 
+      token 
+    }, 'OAuth sync successful', 200);
   } catch (err) {
     next(err);
   }

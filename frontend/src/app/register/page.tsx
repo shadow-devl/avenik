@@ -1,66 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { ECOSYSTEM_ROLES } from "@/lib/constants";
-import { apiPost } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function RegisterPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
-  const [error, setError] = useState("");
+function RegisterContent() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleOAuth = async (provider: string) => {
     setLoading(true);
-
-    if (!role) {
-      setError("Please select a primary role.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await apiPost<any>("/api/auth/register", {
-        name: (firstName + " " + lastName).trim(),
-        email,
-        password,
-        roleCode: role,
-      }, { auth: false });
-
-      if (res.success) {
-        // Automatically sign in
-        const signInRes = await signIn("credentials", {
-          email,
-          password,
-          redirect: false,
-        });
-
-        if (signInRes?.error) {
-          setError("Account created, but automatic login failed. Please log in manually.");
-          router.push('/login');
-        } else {
-          router.push('/dashboard');
-          router.refresh();
-        }
-      } else {
-        setError(res.message || "Registration failed");
-      }
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
+    await signIn(provider, { callbackUrl });
   };
 
+  return (
+    <div className="mt-8 space-y-4">
+      <button
+        type="button"
+        onClick={() => handleOAuth('google')}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition-colors disabled:opacity-50"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+          <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
+          <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"/>
+          <path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"/>
+          <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.26538 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853"/>
+        </svg>
+        Sign up with Google
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleOAuth('microsoft-entra-id')}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition-colors disabled:opacity-50"
+      >
+        <svg viewBox="0 0 23 23" className="h-5 w-5">
+          <path fill="#f3f3f3" d="M0 0h23v23H0z" />
+          <path fill="#f35325" d="M1 1h10v10H1z" />
+          <path fill="#81bc06" d="M12 1h10v10H12z" />
+          <path fill="#05a6f0" d="M1 12h10v10H1z" />
+          <path fill="#ffba08" d="M12 12h10v10H12z" />
+        </svg>
+        Sign up with Microsoft
+      </button>
+
+      <p className="text-center text-sm text-slate-500 mt-4">
+        Already have an account?{" "}
+        <Link href="/login" className="text-blue-400 hover:text-blue-300">
+          Sign in
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
       <Link href="/" className="mb-8 text-sm text-slate-400 hover:text-white transition-colors">
@@ -68,103 +66,12 @@ export default function RegisterPage() {
       </Link>
       <h1 className="text-3xl font-bold">Create Account</h1>
       <p className="mt-3 text-slate-400">
-        Join the Avenik ecosystem. Start building your trust profile today.
+        Join the Avenik ecosystem securely with a verified identity.
       </p>
-
-      <div className="mt-8 space-y-6">
-        {error && (
-          <div className="rounded-lg bg-red-900/50 p-3 text-sm text-red-200 border border-red-800">
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="firstName" className="text-sm font-medium text-slate-300">First Name</label>
-              <input
-                id="firstName"
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Jane"
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="text-sm font-medium text-slate-300">Last Name</label>
-              <input
-                id="lastName"
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="text-sm font-medium text-slate-300">Email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="text-sm font-medium text-slate-300">Password</label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="role" className="text-sm font-medium text-slate-300">Primary Role</label>
-            <select
-              id="role"
-              required
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-            >
-              <option value="" disabled>Select your role...</option>
-              {ECOSYSTEM_ROLES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-500 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-slate-500">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300">
-            Sign in
-          </Link>
-        </p>
-      </div>
+      
+      <Suspense fallback={<div>Loading...</div>}>
+        <RegisterContent />
+      </Suspense>
     </main>
   );
 }
