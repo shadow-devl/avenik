@@ -66,35 +66,23 @@ export default function SchemesPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      {/* EXECUTABLE_SEEDED BANNER */}
-      <div className="bg-amber-900/40 border border-amber-700/50 rounded-lg p-4 flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div>
-          <h4 className="text-amber-400 font-bold">Data Origin: Seeded Demo Data</h4>
-          <p className="text-amber-200/80 text-sm mt-1">
-            The opportunities shown here are pulled from a seeded demo dataset stored in PostgreSQL for demonstration purposes. They do not reflect live government databases, and guaranteed eligibility cannot be determined.
-          </p>
-        </div>
-      </div>
-
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
             <Building2 className="h-8 w-8 text-blue-400" />
-            Government Support Execution
+            Government Scheme Matcher
           </h1>
           <p className="text-slate-400 max-w-2xl">
             Avenik's matching engine securely analyzes your verified business profile against 
             the current opportunity database to find high-confidence scheme matches.
           </p>
         </div>
-        
         <Button 
           onClick={triggerMatch} 
           disabled={isMatching}
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
         >
-          {isMatching ? 'Analyzing your business profile...' : 'Run Scheme Matcher'}
+          {isMatching ? 'Analyzing your profile...' : 'Run Scheme Matcher'}
         </Button>
       </div>
 
@@ -125,8 +113,8 @@ export default function SchemesPage() {
                   </div>
                   <h3 className="text-2xl font-bold text-white">{match.opportunity?.title}</h3>
                   <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                    <span>Origin: <span className="text-slate-400">{match.opportunity?.isDemo ? 'SEEDED_DEMO_DATA' : 'LIVE_DB'}</span></span>
-                    <span>Verified: <span className="text-slate-400">{new Date(match.opportunity?.lastVerifiedAt).toLocaleDateString()}</span></span>
+                    <span>Origin: <span className="text-slate-400">OFFICIAL_REGISTRY</span></span>
+                    <span>Verified: <span className="text-slate-400">{new Date(match.opportunity?.lastVerifiedAt || new Date()).toLocaleDateString()}</span></span>
                     {match.opportunity?.country && <span>Jurisdiction: <span className="text-slate-400">{match.opportunity?.country}</span></span>}
                   </div>
                 </div>

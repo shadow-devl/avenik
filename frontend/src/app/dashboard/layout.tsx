@@ -8,11 +8,11 @@ import { cn } from '@/lib/utils';
 const SIDEBAR_NAV = [
   { name: 'Command Center', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Government Support', href: '/dashboard/schemes', icon: Building2 },
-  { name: 'Goals & Strategy', href: '/dashboard/goals', icon: Target },
-  { name: 'Action Engine', href: '/dashboard/actions', icon: CheckSquare },
-  { name: 'Financial Health', href: '/dashboard/finance', icon: PieChart },
-  { name: 'Trust & Privacy', href: '/dashboard/trust', icon: ShieldCheck },
-  { name: 'Ecosystem Network', href: '/dashboard/network', icon: Users },
+  { name: 'Goals & Strategy', href: '/dashboard/growth-planning', icon: Target },
+  { name: 'Financial Health', href: '/dashboard/financial-intelligence', icon: PieChart },
+  { name: 'Trust & Privacy', href: '/dashboard/avenik-trusted-intelligence', icon: ShieldCheck },
+  { name: 'Ecosystem Network', href: '/dashboard/community', icon: Users },
+  { name: 'Unified Workspace', href: '/dashboard/unified-entrepreneur-intelligence-workspace', icon: CheckSquare },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
