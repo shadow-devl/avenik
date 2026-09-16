@@ -98,7 +98,8 @@ export default function AdvancedFundingReadinessPage() {
           
           <div className="lg:col-span-1 space-y-6">
             <Card className="p-6 border-slate-800 bg-slate-900/50">
-              <h2 className="text-lg font-medium text-white mb-4">New Funding Request</h2>
+              <h2 className="text-lg font-medium text-white mb-2">New Internal Readiness Assessment</h2>
+              <p className="text-xs text-slate-500 mb-4 uppercase">Internal Platform Only • No External Submission</p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Target Amount ($)</label>
@@ -118,16 +119,16 @@ export default function AdvancedFundingReadinessPage() {
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none" 
                   />
                 </div>
-                <Button onClick={createFundingRequest} className="w-full" disabled={!amount || !purpose}>Initiate Assessment</Button>
+                <Button onClick={createFundingRequest} className="w-full" disabled={!amount || !purpose}>Initiate Internal Assessment</Button>
               </div>
             </Card>
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-semibold text-white">Active Funding Requests</h2>
+            <h2 className="text-xl font-semibold text-white">Internal Funding Readiness Records</h2>
             <Card className="p-0 overflow-hidden border-slate-800 bg-slate-900/50">
               {fundingRequests.length === 0 ? (
-                <div className="p-12 text-center text-slate-400">No active funding requests found. Initiate an assessment to begin.</div>
+                <div className="p-12 text-center text-slate-400">No active readiness assessments found. Initiate an assessment to begin.</div>
               ) : (
                 <div className="divide-y divide-slate-800">
                   {fundingRequests.map((req: any) => (

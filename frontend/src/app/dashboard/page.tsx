@@ -115,7 +115,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 border-blue-500/20 bg-blue-500/5 flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-400 mb-1">Business Health</p>
+            <p className="text-sm text-slate-400 mb-1">Business Health <span className="text-[10px] bg-blue-900/50 text-blue-300 px-1 py-0.5 rounded ml-1">CALCULATED</span></p>
             <h3 className="text-3xl font-bold text-blue-400">{healthScore}<span className="text-lg text-slate-500">/100</span></h3>
           </div>
           <TrendingUp className="h-10 w-10 text-blue-500/50" />
@@ -123,8 +123,9 @@ export default function DashboardPage() {
 
         <Card className="p-6 border-emerald-500/20 bg-emerald-500/5 flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-400 mb-1">Trust Profile</p>
-            <h3 className="text-2xl font-bold text-emerald-400">VERIFIED</h3>
+            <p className="text-sm text-slate-400 mb-1">Trust Profile <span className="text-[10px] bg-slate-800 px-1 py-0.5 rounded ml-1">STATUS</span></p>
+            <h3 className="text-xl font-bold text-slate-300">{context.business.status === 'ACTIVE' ? 'BASIC VERIFIED' : 'UNVERIFIED'}</h3>
+            <p className="text-[10px] text-slate-500 mt-1">Platform level only. No Gov KYC.</p>
           </div>
           <Award className="h-10 w-10 text-emerald-500/50" />
         </Card>
@@ -142,7 +143,7 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-amber-500" />
-            Next Best Action
+            Next Best Action <span className="text-[10px] bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded ml-1 uppercase font-normal">Calculated</span>
           </h2>
           {nbas.length > 0 ? (
             nbas.map((action, i) => (

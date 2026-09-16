@@ -77,7 +77,10 @@ export default function FinancialIntelligencePage() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
           
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">Capital Gap Analysis</h2>
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              Capital Gap Analysis
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-normal uppercase">Calculated</span>
+            </h2>
             <Card className="p-6 border-blue-500/20 bg-slate-900/50">
               {capitalGap ? (
                 <div className="space-y-6">
@@ -86,7 +89,7 @@ export default function FinancialIntelligencePage() {
                     <p className="text-4xl font-bold text-blue-400">${(capitalGap.gapAmount || 0).toLocaleString()}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white mb-2">Funding Sources Analyzed</h3>
+                    <h3 className="font-semibold text-white mb-2">Recommended Funding Sources</h3>
                     <div className="flex gap-2 flex-wrap">
                       {capitalGap.recommendations?.map((r: string, i: number) => (
                         <span key={i} className="px-3 py-1 bg-slate-800 text-slate-300 rounded-full text-xs">
@@ -103,13 +106,16 @@ export default function FinancialIntelligencePage() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">Financial Readiness Score</h2>
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              Financial Readiness Score
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-normal uppercase">Calculated</span>
+            </h2>
             <Card className="p-6 border-emerald-500/20 bg-slate-900/50">
               {readiness ? (
                 <div className="space-y-6">
                   <div className="flex items-center gap-6">
                     <div className="w-24 h-24 rounded-full border-4 border-emerald-500 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-emerald-400">{readiness.score}</span>
+                      <span className="text-3xl font-bold text-emerald-400">{readiness.readinessScore || readiness.score}</span>
                     </div>
                     <div>
                       <p className="font-semibold text-white">Overall Readiness</p>
