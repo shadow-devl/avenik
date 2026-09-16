@@ -36,10 +36,10 @@ export default function CommandCenterPage() {
         const bid = ctx.data.business.id;
         
         const [warnRes, nbaRes, actRes, healthRes] = await Promise.all([
-          apiGet<any>('/api/warnings'),
+          apiGet<any>('/api/warnings', { headers: { 'x-business-id': bid } }),
           apiPost<any>('/api/nba/generate', { businessId: bid }),
-          apiGet<any>('/api/actions'),
-          apiPost<any>('/api/health-engine/calculate', { businessId: bid })
+          apiGet<any>('/api/actions', { headers: { 'x-business-id': bid } }),
+          apiPost<any>('/api/health-engine/calculate', { businessId: bid }),
         ]);
         
         if (warnRes.success) setWarnings(warnRes.data);

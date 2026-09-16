@@ -18,6 +18,8 @@ export default function GrowthPlanningPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("FINANCIAL");
 
+  const [businessId, setBusinessId] = useState<string | null>(null);
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
@@ -30,9 +32,14 @@ export default function GrowthPlanningPage() {
   async function fetchGoals() {
     try {
       setLoading(true);
-      const res = await apiGet<any>('/api/goals');
-      if (res.success) {
-        setGoals(res.data);
+      const ctx = await apiGet<any>('/api/context/current');
+      if (ctx.success && ctx.data.business) {
+        const bid = ctx.data.business.id;
+        setBusinessId(bid);
+        const res = await apiGet<any>('/api/goals', { headers: { 'x-business-id': bid } });
+        if (res.success) {
+          setGoals(res.data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -42,8 +49,9 @@ export default function GrowthPlanningPage() {
   }
 
   async function handleCreateGoal() {
+    if (!businessId) return;
     try {
-      await apiPost('/api/goals', { title, category, type: 'GOAL' });
+      await apiPost('/api/goals', { title, category, type: 'GOAL' }, { headers: { 'x-business-id': businessId } });
       setTitle("");
       fetchGoals();
     } catch (err) {
@@ -53,6 +61,9 @@ export default function GrowthPlanningPage() {
   }
 
   if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Goals...</div>;
+  if (!businessId) {
+    return <div className="p-8 text-center text-slate-400">You must create a business profile to manage goals.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">

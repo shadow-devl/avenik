@@ -51,7 +51,7 @@ export default function DashboardPage() {
             if (res.data.business) {
               const [healthRes, goalsRes, nbaRes] = await Promise.all([
                 apiPost<any>('/api/health-engine/calculate', { businessId: res.data.business.id }),
-                apiGet<any>('/api/goals'),
+                apiGet<any>('/api/goals', { headers: { 'x-business-id': res.data.business.id } }),
                 apiPost<any>('/api/nba/generate', { businessId: res.data.business.id })
               ]);
               

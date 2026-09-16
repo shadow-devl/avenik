@@ -28,11 +28,11 @@ export default function SchemesPage() {
         try {
           const ctxJson = await apiGet<any>('/api/context/current');
           
-          if (ctxJson.success && ctxJson.data.hasBusiness) {
-            const bid = ctxJson.data.businessId;
+          if (ctxJson.success && ctxJson.data.business) {
+            const bid = ctxJson.data.business.id;
             setBusinessId(bid);
             
-            const matchJson = await apiGet<any>(`/api/opportunities/matches/${bid}`);
+            const matchJson = await apiGet<any>(`/api/opportunities/matches/${bid}`, { headers: { 'x-business-id': bid } });
             if (matchJson.success) {
               setMatches(matchJson.data);
             }
