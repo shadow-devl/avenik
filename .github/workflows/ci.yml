@@ -27,6 +27,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://prisma:prisma_password@localhost:5432/avenik_test?schema=public
+      DIRECT_URL: postgresql://prisma:prisma_password@localhost:5432/avenik_test?schema=public
       JWT_SECRET: test_secret_123
 
     steps:
