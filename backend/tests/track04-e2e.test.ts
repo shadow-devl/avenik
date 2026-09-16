@@ -22,22 +22,18 @@ describe('Track 04 E2E Required Journeys', () => {
     await prisma.$disconnect();
   });
 
-  it('TEST 1: Register -> Login', async () => {
+  it('TEST 1: OAuth Sync -> Login', async () => {
     const regRes = await request(app)
-      .post('/api/auth/register')
-      .send({ email: 'track04_a@avenik.com', password: 'password123', name: 'Track 04 User A' });
-    expect(regRes.status).toBe(201);
+      .post('/api/auth/oauth')
+      .send({ email: 'track04_a@avenik.com', name: 'Track 04 User A', provider: 'google', providerAccountId: '123' });
+    expect(regRes.status).toBe(200);
     expect(regRes.body.data.token).toBeDefined();
-
-    const loginRes = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'track04_a@avenik.com', password: 'password123' });
-    expect(loginRes.status).toBe(200);
-    userTokenA = loginRes.body.data.token;
+    userTokenA = regRes.body.data.token;
     
     const regResB = await request(app)
-      .post('/api/auth/register')
-      .send({ email: 'track04_b@avenik.com', password: 'password123', name: 'Track 04 User B' });
+      .post('/api/auth/oauth')
+      .send({ email: 'track04_b@avenik.com', name: 'Track 04 User B', provider: 'google', providerAccountId: '456' });
+    expect(regResB.status).toBe(200);
     userTokenB = regResB.body.data.token;
   }, 30000);
 

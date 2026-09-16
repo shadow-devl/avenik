@@ -17,36 +17,42 @@ describe('Context Security & Isolation', () => {
   let businessB_Id: string;
 
   beforeAll(async () => {
+    // Clean up stale test data from prior runs
+    await prisma.business.deleteMany({ where: { displayName: { in: ['Business A', 'Business B'] } } });
+    await prisma.user.deleteMany({ where: { email: { in: ['userA@avenik.com', 'userB@avenik.com'] } } });
+
     // User A
     const userA = await prisma.user.create({
       data: { email: 'userA@avenik.com', name: 'User A' }
-    }, 15000);
+    });
     userA_Id = userA.id;
-    userA_Token = jwt.sign({ userId: userA.id, email: userA.email }, config.jwtSecret);
+    userA_Token = jwt.sign({ userId: userA.id, email: userA.email, roles: ['ENTREPRENEUR'] }, config.jwtSecret);
 
     const businessA = await prisma.business.create({
       data: { ownerUserId: userA.id, displayName: 'Business A' }
-    }, 15000);
+    });
     businessA_Id = businessA.id;
 
     // User B
     const userB = await prisma.user.create({
       data: { email: 'userB@avenik.com', name: 'User B' }
-    }, 15000);
+    });
     userB_Id = userB.id;
-    userB_Token = jwt.sign({ userId: userB.id, email: userB.email }, config.jwtSecret);
+    userB_Token = jwt.sign({ userId: userB.id, email: userB.email, roles: ['ENTREPRENEUR'] }, config.jwtSecret);
 
     const businessB = await prisma.business.create({
       data: { ownerUserId: userB.id, displayName: 'Business B' }
-    }, 15000);
+    });
     businessB_Id = businessB.id;
-  }, 15000);
+  }, 30000);
 
   afterAll(async () => {
-    await prisma.business.deleteMany({ where: { id: { in: [businessA_Id, businessB_Id] } } }, 15000);
-    await prisma.user.deleteMany({ where: { id: { in: [userA_Id, userB_Id] } } }, 15000);
+    const bIds = [businessA_Id, businessB_Id].filter(Boolean);
+    const uIds = [userA_Id, userB_Id].filter(Boolean);
+    if (bIds.length) await prisma.business.deleteMany({ where: { id: { in: bIds } } });
+    if (uIds.length) await prisma.user.deleteMany({ where: { id: { in: uIds } } });
     await prisma.$disconnect();
-  }, 15000);
+  }, 30000);
 
   it('User A can resolve context for Business A', async () => {
     const res = await request(app)

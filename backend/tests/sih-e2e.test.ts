@@ -19,7 +19,7 @@ describe('SIH E2E Demonstration', () => {
       }
     });
 
-    authToken = jwt.sign({ userId: user.id, email: user.email }, config.jwtSecret);
+    authToken = jwt.sign({ userId: user.id, email: user.email, roles: ['ENTREPRENEUR'] }, config.jwtSecret);
 
     const org = await prisma.organization.create({
       data: {
