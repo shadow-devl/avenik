@@ -18,11 +18,6 @@ export default {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         
-        // This is a placeholder for custom credential logic via backend API
-        // For Edge runtime compatibility in middleware, we don't call Prisma here directly 
-        // if this authorize is invoked from edge. Typically Credentials is not invoked on edge.
-        // For the sake of the demo and edge compatibility, we mock the return or we should fetch via standard `fetch()` to our backend.
-        
         try {
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
           const res = await fetch(`${baseUrl}/api/auth/login`, {
@@ -55,17 +50,17 @@ export default {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.roles = (user as any).roles || ["ENTREPRENEUR"];
-        token.backendToken = (user as any).token;
+        token.id = user.id as string;
+        token.roles = user.roles || ["ENTREPRENEUR"];
+        token.backendToken = user.token as string;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as any).roles = token.roles;
-        (session.user as any).token = token.backendToken;
+        session.user.id = token.id;
+        session.user.roles = token.roles;
+        session.user.token = token.backendToken;
       }
       return session;
     },

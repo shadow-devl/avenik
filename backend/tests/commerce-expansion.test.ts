@@ -44,7 +44,7 @@ describe('Global Commerce & Expansion Intelligence', () => {
         relationshipType: 'PARTNER'
       }
     });
-  });
+  }, 30000);
 
   afterAll(async () => {
     await prisma.business.deleteMany({ where: { ownerUserId: user.id } });

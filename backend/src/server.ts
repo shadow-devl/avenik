@@ -22,6 +22,7 @@ import memoryRouter from './routes/memory.js';
 import timelineRouter from './routes/timeline.js';
 import graphRouter from './routes/graph.js';
 import fundingRouter from './routes/funding.js';
+import { financeRouter } from './routes/finance.js';
 import trustRouter from './routes/trust.js';
 import fraudRouter from './routes/fraud.js';
 import goalsRouter from './routes/goals.js';
@@ -50,9 +51,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('dev'));
 
 // ── Routes ───────────────────────────────────────
+import businessRouter from './routes/business.js';
+
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/organizations', organizationsRouter);
+app.use('/api/business', businessRouter);
 app.use('/api/context', contextEngineRouter);
 app.use('/api/opportunities', requireAuth, schemeMatcherRouter);
 app.use('/api/nba', requireAuth, nbaRouter);
@@ -65,6 +69,7 @@ app.use('/api/memory', requireAuth, memoryRouter);
 app.use('/api/timeline', requireAuth, timelineRouter);
 app.use('/api/graph', requireAuth, graphRouter);
 app.use('/api/funding', requireAuth, fundingRouter);
+app.use('/api/finance', requireAuth, financeRouter);
 app.use('/api/trust', requireAuth, trustRouter);
 app.use('/api/fraud', requireAuth, fraudRouter);
 app.use('/api/goals', requireAuth, goalsRouter);

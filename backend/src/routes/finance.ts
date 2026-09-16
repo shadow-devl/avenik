@@ -8,27 +8,21 @@ import { ScenarioService } from '../services/finance/scenario.service.js';
 const router = Router();
 
 const BusinessQuerySchema = z.object({
-  query: z.object({
-    businessId: z.string().uuid()
-  })
+  businessId: z.string().uuid()
 });
 
 const DebtScenarioSchema = z.object({
-  body: z.object({
-    businessId: z.string().uuid(),
-    principal: z.number().positive(),
-    annualInterestRate: z.number().min(0),
-    tenureMonths: z.number().int().positive()
-  })
+  businessId: z.string().uuid(),
+  principal: z.number().positive(),
+  annualInterestRate: z.number().min(0),
+  tenureMonths: z.number().int().positive()
 });
 
 const EquityScenarioSchema = z.object({
-  body: z.object({
-    businessId: z.string().uuid(),
-    currentValuation: z.number().positive(),
-    investmentAmount: z.number().positive(),
-    currentFounderOwnershipPct: z.number().min(0).max(100)
-  })
+  businessId: z.string().uuid(),
+  currentValuation: z.number().positive(),
+  investmentAmount: z.number().positive(),
+  currentFounderOwnershipPct: z.number().min(0).max(100)
 });
 
 /**
@@ -37,7 +31,7 @@ const EquityScenarioSchema = z.object({
  */
 router.get(
   '/capital-gap',
-  validate(BusinessQuerySchema),
+  validate(BusinessQuerySchema, 'query'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { businessId } = req.query;
@@ -57,7 +51,7 @@ router.get(
  */
 router.get(
   '/readiness',
-  validate(BusinessQuerySchema),
+  validate(BusinessQuerySchema, 'query'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { businessId } = req.query;

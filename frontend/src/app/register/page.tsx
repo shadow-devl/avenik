@@ -5,6 +5,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ECOSYSTEM_ROLES } from "@/lib/constants";
+import { apiPost } from "@/lib/api";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -28,41 +29,34 @@ export default function RegisterPage() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(baseUrl + "/api/auth/register", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          name: (firstName + " " + lastName).trim(),
-          roleCode: role
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setError(data.message || "Registration failed");
-        setLoading(false);
-        return;
-      }
-
-      // Auto sign-in
-      const signInRes = await signIn("credentials", {
-        redirect: false,
+      const res = await apiPost<any>("/api/auth/register", {
+        name: (firstName + " " + lastName).trim(),
         email,
         password,
-      });
+        roleCode: role,
+      }, { auth: false });
 
-      if (signInRes?.error) {
-        router.push("/login?registered=true");
+      if (res.success) {
+        // Automatically sign in
+        const signInRes = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (signInRes?.error) {
+          setError("Account created, but automatic login failed. Please log in manually.");
+          router.push('/login');
+        } else {
+          router.push('/dashboard');
+          router.refresh();
+        }
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        setError(res.message || "Registration failed");
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
+    } finally {
       setLoading(false);
     }
   };

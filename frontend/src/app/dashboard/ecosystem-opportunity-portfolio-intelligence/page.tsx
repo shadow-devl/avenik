@@ -26,8 +26,8 @@ export default function EcosystemOpportunityPortfolioIntelligencePage() {
         <p className="mt-1 text-slate-400">Manage your module settings and insights.</p>
 
         <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
-          <h2 className="text-lg font-medium text-white">Module Initialized</h2>
-          <p className="mt-2 text-sm text-slate-400">The Ecosystem Opportunity Portfolio Intelligence functionality has been scaffolded and is ready for data integration.</p>
+          <h2 className="text-lg font-medium text-white">Module Unavailable</h2>
+          <p className="mt-2 text-sm text-slate-400">This capability is not currently available. The backend services, database schema, and AI intelligence engines for this module have not yet been implemented.</p>
         </div>
       </main>
     </div>

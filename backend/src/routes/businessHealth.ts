@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { HealthService } from '../services/health.service.js';
 import { success } from '../utils/response.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
 
 const router = Router();
 
@@ -9,11 +10,11 @@ const router = Router();
 router.post('/calculate', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const businessId = req.body.businessId || (req.headers['x-business-id'] as string | undefined);
-    
-    // Using a mocked context since this endpoint doesn't strictly follow ContextRequest in E2E
-    // We'll wrap it to satisfy the new service
+
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
     const healthRecord = await HealthService.calculateHealth({
-      userId: req.user?.userId || 'system',
+      userId: req.user!.userId,
       requestedBusinessId: businessId
     });
 

@@ -7,39 +7,27 @@ import { success } from '../utils/response.js';
 const router = Router();
 
 const createActionSchema = z.object({
-  body: z.object({
-    title: z.string().min(1),
-    description: z.string().optional(),
-    goalId: z.string().uuid().optional(),
-    assigneeUserId: z.string().uuid().optional(),
-    type: z.enum(['ACTION', 'CHECKLIST_ITEM']).optional(),
-    priority: z.string().optional(),
-    dueDate: z.string().datetime().optional().transform(str => str ? new Date(str) : undefined),
-    source: z.string().optional(),
-    provenance: z.string().optional(),
-    evidenceRequirement: z.string().optional(),
-    visibility: z.string().optional(),
-    executionPlan: z.string().optional(),
-  }),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  goalId: z.string().uuid().optional(),
+  assigneeUserId: z.string().uuid().optional(),
+  type: z.enum(['ACTION', 'CHECKLIST_ITEM']).optional(),
+  priority: z.string().optional(),
+  dueDate: z.string().datetime().optional().transform(str => str ? new Date(str) : undefined),
+  source: z.string().optional(),
+  provenance: z.string().optional(),
+  evidenceRequirement: z.string().optional(),
+  visibility: z.string().optional(),
+  executionPlan: z.string().optional(),
 });
 
 const updateStatusSchema = z.object({
-  params: z.object({
-    id: z.string().uuid(),
-  }),
-  body: z.object({
-    status: z.string().min(1),
-  }),
+  status: z.string().min(1),
 });
 
 const addDependencySchema = z.object({
-  params: z.object({
-    id: z.string().uuid(),
-  }),
-  body: z.object({
-    dependsOnActionId: z.string().uuid(),
-    type: z.enum(['BLOCKS', 'RELATES_TO']).optional(),
-  }),
+  dependsOnActionId: z.string().uuid(),
+  type: z.enum(['BLOCKS', 'RELATES_TO']).optional(),
 });
 
 // GET /api/actions

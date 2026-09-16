@@ -7,28 +7,21 @@ import { success } from '../utils/response.js';
 const router = Router();
 
 const createGoalSchema = z.object({
-  body: z.object({
-    title: z.string().min(1),
-    description: z.string().optional(),
-    category: z.string(),
-    type: z.enum(['GOAL', 'OBJECTIVE', 'MILESTONE']).optional(),
-    parentGoalId: z.string().uuid().optional(),
-    targetDate: z.string().datetime().optional().transform(str => str ? new Date(str) : undefined),
-    baseline: z.number().optional(),
-    target: z.number().optional(),
-    unit: z.string().optional(),
-    priority: z.string().optional(),
-    visibility: z.string().optional(),
-  }),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  category: z.string(),
+  type: z.enum(['GOAL', 'OBJECTIVE', 'MILESTONE']).optional(),
+  parentGoalId: z.string().uuid().optional(),
+  targetDate: z.string().datetime().optional().transform(str => str ? new Date(str) : undefined),
+  baseline: z.number().optional(),
+  target: z.number().optional(),
+  unit: z.string().optional(),
+  priority: z.string().optional(),
+  visibility: z.string().optional(),
 });
 
 const updateProgressSchema = z.object({
-  params: z.object({
-    id: z.string().uuid(),
-  }),
-  body: z.object({
-    progress: z.number().min(0).max(100),
-  }),
+  progress: z.number().min(0).max(100),
 });
 
 // GET /api/goals

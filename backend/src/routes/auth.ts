@@ -46,7 +46,7 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
     });
 
     const userRoles = user.roles.map(r => r.role.code);
-    const token = jwt.sign({ id: user.id, roles: userRoles }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id, email: user.email, roles: userRoles }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     
     return success(res, { user: { id: user.id, email: user.email, name: user.name, roles: userRoles }, token }, 'Registered successfully', 201);
   } catch (err) {
@@ -76,7 +76,7 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const userRoles = user.roles.map(r => r.role.code);
-    const token = jwt.sign({ id: user.id, roles: userRoles }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id, email: user.email, roles: userRoles }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     
     return success(res, { user: { id: user.id, email: user.email, name: user.name, roles: userRoles }, token }, 'Logged in successfully', 200);
   } catch (err) {

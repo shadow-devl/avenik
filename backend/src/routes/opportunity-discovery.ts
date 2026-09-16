@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../db.js';
 import { ContextService } from '../services/context.service.js';
 import { IntentExtractionService } from '../services/intent/intent-extraction.service.js';
@@ -14,7 +14,7 @@ const router = Router();
  * POST /discover
  * Body: { businessId: string, query: string }
  */
-router.post('/discover', async (req: Request, res: Response): Promise<void> => {
+router.post('/discover', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { businessId, query } = req.body;
     if (!businessId || !query) {
@@ -53,7 +53,7 @@ router.post('/discover', async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error: any) {
     logger.error('Hybrid discovery failed:', error);
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
@@ -61,7 +61,7 @@ router.post('/discover', async (req: Request, res: Response): Promise<void> => {
  * Admin Route: Trigger embedding generation
  * POST /admin/embed-all
  */
-router.post('/admin/embed-all', async (req: Request, res: Response): Promise<void> => {
+router.post('/admin/embed-all', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Basic protection - should use proper roles
     const context = await ContextService.resolve({ userId: req.user!.userId });
@@ -73,7 +73,7 @@ router.post('/admin/embed-all', async (req: Request, res: Response): Promise<voi
     const result = await OpportunityEmbeddingService.embedAllOpportunitys();
     res.json({ success: true, data: result });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
@@ -81,7 +81,7 @@ router.post('/admin/embed-all', async (req: Request, res: Response): Promise<voi
  * LEGACY HEURISTIC MATCHER (Kept for backward compatibility and tests)
  * POST /match
  */
-router.post('/match', async (req: Request, res: Response): Promise<void> => {
+router.post('/match', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { businessId } = req.body;
     if (!businessId) {
@@ -142,14 +142,14 @@ router.post('/match', async (req: Request, res: Response): Promise<void> => {
 
     res.json({ success: true, data: savedMatches });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
 /**
  * GET /matches/:businessId
  */
-router.get('/matches/:businessId', async (req: Request, res: Response): Promise<void> => {
+router.get('/matches/:businessId', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const businessId = req.params.businessId as string;
     
@@ -185,7 +185,7 @@ router.get('/matches/:businessId', async (req: Request, res: Response): Promise<
 
     res.json({ success: true, data: legacyMatches });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
