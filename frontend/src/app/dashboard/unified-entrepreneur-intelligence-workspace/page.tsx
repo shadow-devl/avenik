@@ -51,6 +51,9 @@ export default function UnifiedEntrepreneurIntelligenceWorkspacePage() {
   }
 
   if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Unified Workspace...</div>;
+  if (timeline.length === 0 && memory.length === 0 && graph.length === 0) {
+    return <div className="p-8 text-center text-slate-400">You must create a business profile to view the Intelligence Workspace.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">

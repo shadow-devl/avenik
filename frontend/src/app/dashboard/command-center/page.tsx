@@ -55,6 +55,9 @@ export default function CommandCenterPage() {
   }
 
   if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Command Center...</div>;
+  if (!healthScore && actions.length === 0 && warnings.length === 0 && nbas.length === 0) {
+    return <div className="p-8 text-center text-slate-400">You must create a business profile to view the Command Center.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">

@@ -122,7 +122,7 @@ export class ContextService {
       };
     }
 
-    // 5. Journey Context (Mock heuristic for now based on profile completion)
+    // 5. Journey Context (Deterministic heuristic based on active business)
     const journey = activeBusiness ? 'GROW' : 'ONBOARDING';
 
     // 6. Security / Permissions
