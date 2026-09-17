@@ -87,6 +87,9 @@ import { supportPortfolioRouter } from './routes/government-support-portfolio.js
 import { ideasRouter } from './routes/ideas.js';
 import { ipRouter } from './routes/ip.js';
 import { advancedSupplierRouter } from './routes/advanced-supplier.js';
+import { universityRouter } from './routes/university.js';
+import { wellnessRouter } from './routes/wellness.js';
+import { dataGovernanceRouter } from './routes/data-governance.js';
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
@@ -148,6 +151,9 @@ app.use('/api/government-support-portfolio', requireAuth, supportPortfolioRouter
 app.use('/api/ideas', requireAuth, ideasRouter);
 app.use('/api/ip', requireAuth, ipRouter);
 app.use('/api/advanced-supplier', requireAuth, advancedSupplierRouter);
+app.use('/api/university', requireAuth, universityRouter);
+app.use('/api/wellness', requireAuth, wellnessRouter);
+app.use('/api/data-governance', requireAuth, dataGovernanceRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
