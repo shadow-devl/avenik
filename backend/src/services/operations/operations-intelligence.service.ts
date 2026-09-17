@@ -1,36 +1,60 @@
-import { prisma } from '../../db.js';
+﻿import { prisma } from '../../db.js';
 
 export class OperationsIntelligenceService {
   static async getMetrics(businessId: string) {
-    const risks = await prisma.operationalRisk.findMany({
-      where: { businessId, mitigated: false },
-      orderBy: { createdAt: 'desc' },
-      take: 20
+    const capacities = await prisma.workforceCapacity.findMany({
+      where: { businessId }
     });
 
-    const pendingActions = await prisma.action.findMany({
-      where: { businessId, status: { not: 'COMPLETED' } },
-      orderBy: { createdAt: 'desc' },
-      take: 10
+    const actions = await prisma.action.findMany({
+      where: { 
+        businessId,
+        status: { in: ['TODO', 'IN_PROGRESS', 'BLOCKED'] }
+      }
     });
 
-    const criticalRisksCount = risks.filter(r => r.severity === 'CRITICAL' || r.severity === 'HIGH').length;
+    const signals = await prisma.intelligenceSignal.findMany({
+      where: {
+        businessId,
+        domain: 'OPERATIONS'
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
-    let systemHealth = 100 - (criticalRisksCount * 10) - (pendingActions.length * 2);
-    if (systemHealth < 0) systemHealth = 0;
+    let totalCapacity = 0;
+    let utilizedCapacity = 0;
+
+    capacities.forEach(c => {
+      totalCapacity += c.availableHours;
+      utilizedCapacity += c.allocatedHours;
+    });
+
+    const utilizationRate = totalCapacity > 0 ? Math.round((utilizedCapacity / totalCapacity) * 100) : 0;
+    const blockedActions = actions.filter(a => a.status === 'BLOCKED').length;
 
     return {
-      systemHealth,
-      activeRisks: risks.map(r => ({
-        id: r.id,
-        area: r.riskArea,
-        severity: r.severity,
-        date: r.createdAt
+      overview: {
+        utilizationRate,
+        pendingOperations: actions.length,
+        blockedOperations: blockedActions,
+        operationalAlerts: signals.length
+      },
+      workforceStatus: capacities.map(c => ({
+        id: c.id,
+        role: c.roleId,
+        utilization: c.availableHours > 0 ? Math.round((c.allocatedHours / c.availableHours) * 100) : 0
       })),
-      bottlenecks: pendingActions.map((a: any) => ({
+      activeAlerts: signals.slice(0, 5).map(s => ({
+        id: s.id,
+        type: s.signalType,
+        title: s.title,
+        impact: s.impact,
+        urgency: s.urgency
+      })),
+      bottlenecks: actions.filter(a => a.status === 'BLOCKED').map(a => ({
         id: a.id,
         title: a.title,
-        status: a.status
+        priority: a.priority
       }))
     };
   }

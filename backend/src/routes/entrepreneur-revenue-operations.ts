@@ -1,19 +1,27 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
+import { RevenueOperationsService } from '../services/revenue/revenue-operations.service.js';
+import { success } from '../utils/response.js';
 
 const router = Router();
 
-// GET /api/entrepreneur-revenue-operations
-router.get('/', requireAuth, async (req, res, next) => {
+const businessQuerySchema = z.object({
+  businessId: z.string().uuid(),
+});
+
+router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      message: 'Entrepreneur Revenue Operations module loaded successfully',
-      moduleId: '1.58'
-    });
+    const { businessId } = req.query;
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
+
+    const metrics = await RevenueOperationsService.getMetrics(businessId as string);
+    success(res, metrics);
   } catch (error) {
     next(error);
   }
 });
 
-export default router;
+export const revenueOperationsRouter = router;
