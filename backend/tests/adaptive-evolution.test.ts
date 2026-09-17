@@ -7,8 +7,10 @@ import { prisma } from '../src/db.js';
 
 describe('Global Adaptive Intelligence Evolution', () => {
   let businessId: string;
+  let token: string;
 
   beforeAll(async () => {
+    token = jwt.sign({ userId: '00000000-0000-0000-0000-000000000000', email: 'test@test.com', roles: ['ENTREPRENEUR'] }, config.jwtSecret);
     const business = await prisma.business.create({
       data: {
         displayName: 'Test Corp',

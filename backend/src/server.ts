@@ -35,6 +35,9 @@ import { customerIntelligenceRouter } from './routes/customer-intelligence.js';
 import { globalPlatformRouter } from './routes/global-platform.js';
 import { operationsIntelligenceRouter } from './routes/operations-intelligence.js';
 import { marketIntelligenceRouter } from './routes/market-intelligence.js';
+import { financialIntelligenceRouter } from './routes/financial-intelligence.js';
+import { workforceRouter } from './routes/workforce.js';
+import { schemeSuccessRouter } from './routes/scheme-success.js';
 
 const app = express();
 
@@ -84,6 +87,9 @@ app.use('/api/evolution', requireAuth, evolutionRouter);
 app.use('/api/customer', requireAuth, customerIntelligenceRouter);
 app.use('/api/operations', requireAuth, operationsIntelligenceRouter);
 app.use('/api/market', requireAuth, marketIntelligenceRouter);
+app.use('/api/financial-intelligence', requireAuth, financialIntelligenceRouter);
+app.use('/api/workforce', requireAuth, workforceRouter);
+app.use('/api/scheme-success', requireAuth, schemeSuccessRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────

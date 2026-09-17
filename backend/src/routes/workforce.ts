@@ -56,4 +56,19 @@ router.post(
   }
 );
 
+router.get(
+  '/metrics',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const businessId = req.query.businessId as string || req.headers['x-business-id'] as string;
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
+      const result = await WorkforceService.getWorkforceMetrics(businessId);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export const workforceRouter = router;

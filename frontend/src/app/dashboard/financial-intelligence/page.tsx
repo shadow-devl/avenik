@@ -15,16 +15,17 @@ export default function FinancialIntelligencePage() {
   
   const [readiness, setReadiness] = useState<any>(null);
   const [capitalGap, setCapitalGap] = useState<any>(null);
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
-    if (status === "authenticated") {
+    if (status === "authenticated" && session?.user?.id) {
       fetchFinanceData();
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   async function fetchFinanceData() {
     try {
@@ -33,13 +34,15 @@ export default function FinancialIntelligencePage() {
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
         
-        const [readinessRes, gapRes] = await Promise.all([
+        const [readinessRes, gapRes, metricsRes] = await Promise.all([
           apiGet<any>(`/api/finance/readiness?businessId=${bid}`),
-          apiGet<any>(`/api/finance/capital-gap?businessId=${bid}`)
+          apiGet<any>(`/api/finance/capital-gap?businessId=${bid}`),
+          apiGet<any>(`/api/financial-intelligence/metrics?businessId=${bid}`)
         ]);
         
         if (readinessRes.success) setReadiness(readinessRes.data);
         if (gapRes.success) setCapitalGap(gapRes.data);
+        if (metricsRes.success) setMetrics(metricsRes.data);
       }
     } catch (err) {
       console.error(err);
@@ -72,7 +75,28 @@ export default function FinancialIntelligencePage() {
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <h1 className="text-3xl font-bold text-white tracking-tight">Financial Intelligence</h1>
-        <p className="text-slate-400 mt-2">Capital gap analysis, financial readiness, and predictive insights.</p>
+        <p className="text-slate-400 mt-2">Capital gap analysis, runway metrics, and predictive insights.</p>
+
+        {metrics && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+            <Card className="p-4 bg-slate-900/50 border-slate-800">
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Est. Runway</p>
+              <h3 className="text-2xl font-bold text-emerald-400 mt-1">{metrics.overview.estimatedRunwayMonths} months</h3>
+            </Card>
+            <Card className="p-4 bg-slate-900/50 border-slate-800">
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Monthly Burn</p>
+              <h3 className="text-2xl font-bold text-rose-400 mt-1">${metrics.overview.monthlyBurnRate.toLocaleString()}</h3>
+            </Card>
+            <Card className="p-4 bg-slate-900/50 border-slate-800">
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Cash Flow</p>
+              <h3 className="text-2xl font-bold text-blue-400 mt-1">${metrics.overview.currentCashFlow.toLocaleString()}</h3>
+            </Card>
+            <Card className="p-4 bg-slate-900/50 border-slate-800">
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Revenue</p>
+              <h3 className="text-2xl font-bold text-emerald-400 mt-1">${metrics.overview.totalRevenue.toLocaleString()}</h3>
+            </Card>
+          </div>
+        )}
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
           
