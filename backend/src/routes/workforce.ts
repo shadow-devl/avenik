@@ -1,8 +1,9 @@
-import { Router, Request, Response, NextFunction } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { ContextService } from '../services/context.service.js';
 import { WorkforceService } from '../services/workforce/workforce.service.js';
+import { PredictiveWorkforceService } from '../services/workforce/predictive-workforce.service.js';
 
 const router = Router();
 
@@ -65,6 +66,24 @@ router.get(
 
       const result = await WorkforceService.getWorkforceMetrics(businessId);
       res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post(
+  '/predict',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { businessId, horizonMonths } = req.body;
+      if (!businessId) {
+        return res.status(400).json({ error: 'businessId is required' });
+      }
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
+      const forecast = await PredictiveWorkforceService.generateForecast(businessId, horizonMonths || 6);
+      res.json({ success: true, data: forecast });
     } catch (error) {
       next(error);
     }

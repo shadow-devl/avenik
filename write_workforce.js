@@ -1,4 +1,6 @@
-﻿"use client";
+﻿const fs = require('fs');
+
+const content = \"use client";
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -36,7 +38,7 @@ export default function PredictiveWorkforcePage() {
         const bid = ctx.data.business.id;
         setBusinessId(bid);
 
-        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=workforce`);
+        const res = await apiGet<any>(\\\/api/generic-intelligence/metrics?businessId=\\\&domain=workforce\\\);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -125,7 +127,7 @@ export default function PredictiveWorkforcePage() {
                       <div className="flex items-center gap-2 mb-1">
                         <Briefcase className="h-4 w-4 text-slate-400" />
                         <h4 className="font-bold text-white text-lg">{p.role}</h4>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${p.urgency === 'HIGH' ? 'bg-rose-500/10 text-rose-400' : p.urgency === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                        <span className={\\\	ext-xs px-2 py-0.5 rounded-full font-bold \\\\\\}>
                           {p.urgency} URGENCY
                         </span>
                       </div>
@@ -206,4 +208,6 @@ export default function PredictiveWorkforcePage() {
       </main>
     </div>
   );
-}
+\;
+
+fs.writeFileSync('frontend/src/app/dashboard/workforce/page.tsx', content);
