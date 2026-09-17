@@ -1,19 +1,23 @@
-import { Router } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
+import { IdeationService } from '../services/innovation/ideation.service.js';
 
 const router = Router();
 
-// GET /api/ideas
-router.get('/', requireAuth, async (req, res, next) => {
-  try {
-    res.json({
-      success: true,
-      message: 'Ideas module loaded successfully',
-      phase: '1.30'
-    });
-  } catch (error) {
-    next(error);
-  }
+router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  res.json({ success: true, message: 'Ideation module loaded' });
 });
 
+router.post('/analyze', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { businessId } = req.body;
+    if (!businessId) return res.status(400).json({ error: 'businessId required' });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+    const data = await IdeationService.generate(businessId);
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
+});
+
+export const ideasRouter = router;
 export default router;

@@ -84,6 +84,9 @@ import { forecastingIntelligenceRouter } from './routes/forecasting-intelligence
 import { cybersecurityRouter } from './routes/cybersecurity.js';
 import { internationalizationRouter } from './routes/internationalization.js';
 import { supportPortfolioRouter } from './routes/government-support-portfolio.js';
+import { ideasRouter } from './routes/ideas.js';
+import { ipRouter } from './routes/ip.js';
+import { advancedSupplierRouter } from './routes/advanced-supplier.js';
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
@@ -142,6 +145,9 @@ app.use('/api/forecasting-intelligence', requireAuth, forecastingIntelligenceRou
 app.use('/api/cybersecurity', requireAuth, cybersecurityRouter);
 app.use('/api/internationalization', requireAuth, internationalizationRouter);
 app.use('/api/government-support-portfolio', requireAuth, supportPortfolioRouter);
+app.use('/api/ideas', requireAuth, ideasRouter);
+app.use('/api/ip', requireAuth, ipRouter);
+app.use('/api/advanced-supplier', requireAuth, advancedSupplierRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
