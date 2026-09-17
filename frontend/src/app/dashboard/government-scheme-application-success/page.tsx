@@ -1,153 +1,91 @@
 ﻿"use client";
-
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { apiGet } from '@/lib/api';
-import { Landmark, CheckCircle, Clock, XCircle, TrendingUp } from "lucide-react";
+import { Button } from '@/components/ui/Button';
+import { apiGet, apiPost } from '@/lib/api';
+import { FileText, BrainCircuit, PenTool, ShieldAlert } from "lucide-react";
 
 export default function SchemeSuccessPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+    if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated" && session?.user?.id) {
-      fetchMetrics();
+      apiGet<any>('/api/context/current').then(ctx => {
+        if (ctx.success && ctx.data.business) setBusinessId(ctx.data.business.id);
+      });
     }
   }, [status, router, session]);
 
-  async function fetchMetrics() {
+  async function runAudit() {
+    if (!businessId) return;
+    setIsProcessing(true);
     try {
-      setLoading(true);
-      const ctx = await apiGet<any>('/api/context/current');
-      if (ctx.success && ctx.data.business) {
-        const bid = ctx.data.business.id;
-        const res = await apiGet<any>(`/api/scheme-success/metrics?businessId=${bid}`);
-        if (res.success) {
-          setMetrics(res.data);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await apiPost<any>('/api/government-scheme-application-success/analyze', { businessId });
+      if (res.success) setSuccess(res.data);
+    } finally { setIsProcessing(false); }
   }
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Scheme Applications...</div>;
+  if (status === "loading") return <div className="p-8 text-slate-400">Loading Application Engine...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12">
-      <nav className="border-b border-slate-800 bg-slate-900/50">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-              <span className="text-blue-400">A</span>venik
-            </Link>
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
-              Scheme Application Success
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white">
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
+      <nav className="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex justify-between">
+        <Link href="/dashboard" className="text-xl font-bold tracking-tight text-yellow-400">Avenik Grants</Link>
+        <Link href="/dashboard" className="text-sm text-slate-400">Back</Link>
       </nav>
-
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <Landmark className="h-8 w-8 text-blue-400" />
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Scheme Application Success</h1>
-            <p className="mt-1 text-slate-400">Track and optimize your government support applications.</p>
+      <main className="mx-auto max-w-5xl px-6 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex gap-3 items-center">
+            <FileText className="h-8 w-8 text-yellow-400" />
+            <h1 className="text-3xl font-bold text-white">Scheme Application Success</h1>
           </div>
+          <Button onClick={runAudit} disabled={isProcessing} className="bg-yellow-600 hover:bg-yellow-700 text-white flex gap-2">
+            <BrainCircuit className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} /> Draft Application Strategy
+          </Button>
         </div>
 
-        {!metrics ? (
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
-            <h2 className="text-lg font-medium text-white">System Initializing</h2>
-            <p className="mt-2 text-sm text-slate-400">Connecting to your application records.</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Success Rate</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-white">{metrics.successRate}%</h3>
-                  <div className={`p-1.5 rounded-lg mb-1`}>
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Total Applied</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-blue-400">{metrics.totalApplied}</h3>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Approved / Won</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-emerald-400">{metrics.totalWon}</h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-emerald-500/10 text-emerald-400">
-                    <CheckCircle className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pending Review</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-amber-400">{metrics.pendingApplications}</h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-amber-500/10 text-amber-400">
-                    <Clock className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-white mb-4">Application History</h2>
-              {metrics.recentApplications.length === 0 ? (
-                <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-                  <p className="text-sm text-slate-400">No applications tracked yet. Start discovering schemes in Opportunity Discovery.</p>
-                </Card>
-              ) : (
+        {success && (
+          <div className="space-y-6 animate-in fade-in">
+            <Card className="p-6 bg-yellow-950/20 border-yellow-500/20 flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-4xl font-black text-white">{success.probabilityOfSuccessScore}%</div>
+                <div className="text-xs text-slate-400 uppercase mt-1">Win Probability</div>
+              </div>
+              <div className="flex-1 text-slate-300 text-lg">{success.summary}</div>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div>
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><PenTool className="h-5 w-5 text-yellow-400"/> Narrative Angles</h3>
                 <div className="space-y-3">
-                  {metrics.recentApplications.map((app: any) => (
-                    <Card key={app.id} className="p-4 bg-slate-900 border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <h4 className="font-semibold text-white">{app.schemeName}</h4>
-                        <p className="text-sm text-slate-400 mt-1">{app.provider || "Government Body"}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-xs text-slate-500">Updated: {new Date(app.lastUpdated).toLocaleDateString()}</p>
-                          {app.confidence && (
-                            <p className="text-xs text-slate-400 mt-1">Match: {Math.round(app.confidence * 100)}%</p>
-                          )}
-                        </div>
-                        <span className={`ext-xs px-3 py-1.5 rounded-full font-medium`}>
-                          {app.status}
-                        </span>
-                      </div>
+                  {success.narrativeAngles?.map((n: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-yellow-500">
+                      <div className="font-bold text-white mb-2">{n.angle}</div>
+                      <div className="text-sm text-slate-400">{n.justification}</div>
                     </Card>
                   ))}
                 </div>
-              )}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><ShieldAlert className="h-5 w-5 text-rose-400"/> Weakness Mitigation</h3>
+                <div className="space-y-3">
+                  {success.weaknesses?.map((w: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-rose-500">
+                      <div className="font-bold text-rose-400 mb-2">Issue: {w.weakness}</div>
+                      <div className="text-sm text-slate-300">Fix: {w.mitigation}</div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

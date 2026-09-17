@@ -38,7 +38,6 @@ import { integrationsRouter } from './routes/integrations.js';
 import { marketIntelligenceRouter } from './routes/market-intelligence.js';
 import { financialIntelligenceRouter } from './routes/financial-intelligence.js';
 import { workforceRouter } from './routes/workforce.js';
-import { schemeSuccessRouter } from './routes/scheme-success.js';
 import { decisionIntelligenceRouter } from './routes/decision-intelligence.js';
 import { marketingIntelligenceRouter } from './routes/marketing-intelligence.js';
 import { businessIntelligenceRouter } from './routes/business-intelligence.js';
@@ -90,6 +89,9 @@ import { advancedSupplierRouter } from './routes/advanced-supplier.js';
 import { universityRouter } from './routes/university.js';
 import { wellnessRouter } from './routes/wellness.js';
 import { dataGovernanceRouter } from './routes/data-governance.js';
+import { opportunityExecutionRouter } from './routes/ecosystem-opportunity-execution.js';
+import { selfServiceRouter } from './routes/customer-self-service-portal.js';
+import { schemeSuccessRouter } from './routes/government-scheme-application-success.js';
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
@@ -120,7 +122,6 @@ app.use('/api/operations', requireAuth, operationsIntelligenceRouter);
 app.use('/api/market', requireAuth, marketIntelligenceRouter);
 app.use('/api/financial-intelligence', requireAuth, financialIntelligenceRouter);
 app.use('/api/workforce', requireAuth, workforceRouter);
-app.use('/api/scheme-success', requireAuth, schemeSuccessRouter);
 app.use('/api/decision-intelligence', requireAuth, decisionIntelligenceRouter);
 app.use('/api/marketing-intelligence', requireAuth, marketingIntelligenceRouter);
 app.use('/api/business-intelligence', requireAuth, businessIntelligenceRouter);
@@ -154,6 +155,9 @@ app.use('/api/advanced-supplier', requireAuth, advancedSupplierRouter);
 app.use('/api/university', requireAuth, universityRouter);
 app.use('/api/wellness', requireAuth, wellnessRouter);
 app.use('/api/data-governance', requireAuth, dataGovernanceRouter);
+app.use('/api/ecosystem-opportunity-execution', requireAuth, opportunityExecutionRouter);
+app.use('/api/customer-self-service-portal', requireAuth, selfServiceRouter);
+app.use('/api/government-scheme-application-success', requireAuth, schemeSuccessRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
