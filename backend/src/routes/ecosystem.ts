@@ -1,9 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { ContextService } from '../services/context.service.js';
 import { EcosystemDiscoveryService } from '../services/ecosystem/ecosystem-discovery.service.js';
 import { EcosystemRelationshipService } from '../services/ecosystem/ecosystem-relationship.service.js';
+import { EcosystemPortfolioService } from '../services/ecosystem/ecosystem-portfolio.service.js';
 import { prisma } from '../db.js';
 import { success } from '../utils/response.js';
 
@@ -102,4 +103,24 @@ router.post(
   }
 );
 
+/**
+ * GET /api/ecosystem/portfolio/metrics
+ * Get Ecosystem Portfolio Metrics
+ */
+router.get(
+  '/portfolio/metrics',
+  async (req, res, next) => {
+    try {
+      const businessId = req.query.businessId as string || req.headers['x-business-id'] as string;
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
+
+      const metrics = await EcosystemPortfolioService.getPortfolioMetrics(businessId as string);
+      success(res, metrics);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export const ecosystemRouter = router;
+
