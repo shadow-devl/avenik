@@ -1,174 +1,93 @@
 ﻿"use client";
-
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { apiGet } from '@/lib/api';
-import { CircleDollarSign, TrendingUp, Briefcase, Activity, CalendarClock } from "lucide-react";
+import { Button } from '@/components/ui/Button';
+import { apiGet, apiPost } from '@/lib/api';
+import { CircleDollarSign, BrainCircuit, TrendingUp, AlertTriangle } from "lucide-react";
 
-export default function RevenueOperationsPage() {
+export default function RevOpsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [revops, setRevops] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+    if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated" && session?.user?.id) {
-      fetchMetrics();
+      apiGet<any>('/api/context/current').then(ctx => {
+        if (ctx.success && ctx.data.business) setBusinessId(ctx.data.business.id);
+      });
     }
   }, [status, router, session]);
 
-  async function fetchMetrics() {
+  async function runAudit() {
+    if (!businessId) return;
+    setIsProcessing(true);
     try {
-      setLoading(true);
-      const ctx = await apiGet<any>('/api/context/current');
-      if (ctx.success && ctx.data.business) {
-        const bid = ctx.data.business.id;
-        const res = await apiGet<any>(`/api/revenue-operations/metrics?businessId=${bid}`);
-        if (res.success) {
-          setMetrics(res.data);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await apiPost<any>('/api/revenue-operations/analyze', { businessId });
+      if (res.success) setRevops(res.data);
+    } finally { setIsProcessing(false); }
   }
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Revenue Operations...</div>;
+  if (status === "loading") return <div className="p-8 text-slate-400">Loading RevOps...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12">
-      <nav className="border-b border-slate-800 bg-slate-900/50">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-              <span className="text-blue-400">A</span>venik
-            </Link>
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
-              Revenue Operations
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white">
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
+      <nav className="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex justify-between">
+        <Link href="/dashboard" className="text-xl font-bold tracking-tight text-emerald-400">Avenik RevOps</Link>
+        <Link href="/dashboard" className="text-sm text-slate-400">Back</Link>
       </nav>
-
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <CircleDollarSign className="h-8 w-8 text-emerald-400" />
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Revenue Operations</h1>
-            <p className="mt-1 text-slate-400">Sales pipeline, revenue tracking, and MRR forecasting.</p>
+      <main className="mx-auto max-w-5xl px-6 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex gap-3 items-center">
+            <CircleDollarSign className="h-8 w-8 text-emerald-400" />
+            <h1 className="text-3xl font-bold text-white">Revenue Operations</h1>
           </div>
+          <Button onClick={runAudit} disabled={isProcessing} className="bg-emerald-600 hover:bg-emerald-700 text-white flex gap-2">
+            <BrainCircuit className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} /> Scan Pipeline
+          </Button>
         </div>
 
-        {!metrics ? (
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
-            <h2 className="text-lg font-medium text-white">System Initializing</h2>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Total Revenue (YTD)</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-white"></h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-emerald-500/10 text-emerald-400">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">MRR Approximation</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-emerald-400"></h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-emerald-500/10 text-emerald-400">
-                    <CalendarClock className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pipeline Value</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-blue-400"></h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-blue-500/10 text-blue-400">
-                    <Activity className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Active Deals</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-purple-400">{metrics.overview.activeDeals}</h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-purple-500/10 text-purple-400">
-                    <Briefcase className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {revops && (
+          <div className="space-y-6 animate-in fade-in">
+            <Card className="p-6 bg-emerald-950/20 border-emerald-500/20 flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-4xl font-black text-white">{revops.pipelineVelocityScore}</div>
+                <div className="text-xs text-slate-400 uppercase mt-1">Velocity Score</div>
+              </div>
+              <div className="flex-1 text-slate-300 text-lg">{revops.summary}</div>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <div>
-                <h2 className="text-xl font-bold text-white mb-4">Commercial Pipeline</h2>
-                {metrics.pipeline.length === 0 ? (
-                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-                    <p className="text-sm text-slate-400">No active commercial deals in pipeline.</p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {metrics.pipeline.map((deal: any) => (
-                      <Card key={deal.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold text-white">{deal.title}</h4>
-                          <span className={`ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full`}>
-                            {deal.status}
-                          </span>
-                        </div>
-                        <div className="text-right flex flex-col items-end">
-                          <p className="font-bold text-emerald-400"></p>
-                          <span className="text-xs text-slate-500 mt-1">Match: {Math.round((deal.likelihood || 0) * 100)}%</span>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><AlertTriangle className="h-5 w-5 text-rose-400"/> Revenue Leakage</h3>
+                <div className="space-y-3">
+                  {revops.revenueLeakagePoints?.map((l: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-rose-500">
+                      <div className="flex justify-between">
+                        <div className="font-bold text-white mb-1">{l.stage}</div>
+                        <div className="text-xs font-bold text-rose-400">{l.impact} Impact</div>
+                      </div>
+                      <div className="text-xs text-slate-300 mt-2 bg-slate-950 p-2 rounded">Fix: {l.fix}</div>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-white mb-4">Recent Revenue Activity</h2>
-                {metrics.revenueHistory.length === 0 ? (
-                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-                    <p className="text-sm text-slate-400">No recorded revenue transactions.</p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {metrics.revenueHistory.map((rev: any) => (
-                      <Card key={rev.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-slate-200">{rev.description || 'Revenue Inflow'}</h4>
-                          <p className="text-xs text-slate-500 mt-1">{new Date(rev.date).toLocaleDateString()}</p>
-                        </div>
-                        <span className="font-bold text-emerald-400">
-                          +{rev.amount.toLocaleString()} {rev.currency}
-                        </span>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><TrendingUp className="h-5 w-5 text-emerald-400"/> Acceleration Plays</h3>
+                <div className="space-y-3">
+                  {revops.accelerationPlays?.map((p: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-emerald-500">
+                      <div className="font-bold text-white mb-1">{p.play}</div>
+                      <div className="text-sm text-emerald-400 font-medium">{p.expectedLift}</div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

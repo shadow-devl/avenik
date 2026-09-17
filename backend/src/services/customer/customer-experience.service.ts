@@ -1,56 +1,50 @@
 ﻿import { prisma } from '../../db.js';
+import { ai } from '../../lib/gemini.js';
 
 export class CustomerExperienceService {
-  static async getMetrics(businessId: string) {
-    const signals = await prisma.intelligenceSignal.findMany({
-      where: {
-        businessId,
-        domain: 'CUSTOMER'
-      },
-      orderBy: { createdAt: 'desc' }
+  static async analyze(businessId: string) {
+    const segments = await prisma.customerSegment.findMany({ where: { plan: { businessId } }, take: 10 });
+    const frauds = await prisma.fraudCase.findMany({ where: { businessId }, take: 5 }); // Use as proxy for friction
+
+    const context = JSON.stringify({
+      customerSegments: segments.map(s => ({ name: s.name, readiness: s.readiness })),
+      frictionPoints: frauds.map(f => f.type)
     });
 
-    const segments = await prisma.customerSegment.findMany({
-      where: { 
-        plan: { businessId } 
-      }
+    const prompt = `
+You are AVENIK's Customer Experience AI.
+Analyze the customer segments and friction points.
+Generate an actionable Customer Experience (CX) strategy.
+
+Context:
+${context}
+
+Respond EXACTLY with a JSON object in this format:
+{
+  "summary": "2-3 sentences explaining the CX posture.",
+  "cxHealthScore": number (0-100),
+  "frictionPoints": [
+    {
+      "journeyStage": "Stage of customer journey",
+      "severity": "HIGH" | "MEDIUM" | "LOW",
+      "resolution": "How to resolve this friction"
+    }
+  ],
+  "loyaltyInitiatives": [
+    {
+      "initiative": "Name of the initiative",
+      "targetSegment": "Which segment this targets",
+      "expectedLift": "e.g., +20% retention"
+    }
+  ]
+}
+`.trim();
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json", temperature: 0.3 }
     });
-
-    // Mock NPS for now since it's not directly in CustomerSegment
-    let totalNps = 0;
-    let validSegments = 0;
-    
-    segments.forEach(s => {
-      // simulate nps score
-      totalNps += 50; 
-      validSegments++;
-    });
-
-    const averageNps = validSegments > 0 ? Math.round(totalNps / validSegments) : 45; // baseline NPS
-    const activeRisks = signals.filter(s => s.signalType === 'RISK' || s.signalType === 'DETERIORATION').length;
-    const activeOpportunities = signals.filter(s => s.signalType === 'OPPORTUNITY').length;
-
-    return {
-      overview: {
-        averageNps,
-        activeRisks,
-        activeOpportunities,
-        trackedSegments: segments.length
-      },
-      cxSignals: signals.slice(0, 10).map(s => ({
-        id: s.id,
-        type: s.signalType,
-        title: s.title,
-        impact: s.impact,
-        urgency: s.urgency,
-        confidence: s.confidence
-      })),
-      segmentSentiment: segments.map(s => ({
-        id: s.id,
-        name: s.name,
-        nps: 50, // mock
-        satisfaction: s.readiness
-      }))
-    };
+    return JSON.parse(response.text!);
   }
 }
