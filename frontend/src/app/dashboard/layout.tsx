@@ -6,14 +6,12 @@ import { LayoutDashboard, Building2, Target, CheckSquare, ShieldCheck, PieChart,
 import { cn } from '@/lib/utils';
 
 const SIDEBAR_NAV = [
-  { name: 'Command Center', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Government Support', href: '/dashboard/schemes', icon: Building2 },
-  { name: 'Goals & Strategy', href: '/dashboard/growth-planning', icon: Target },
-  { name: 'Financial Health', href: '/dashboard/financial-intelligence', icon: PieChart },
+  { name: 'Dashboard Home', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Financial Intelligence', href: '/dashboard/financial-intelligence', icon: PieChart },
+  { name: 'AI Command Center', href: '/dashboard/ai-intelligence', icon: Target },
   { name: 'Trust & Privacy', href: '/dashboard/avenik-trusted-intelligence', icon: ShieldCheck },
-  { name: 'Ecosystem Network', href: '/dashboard/community', icon: Users },
   { name: 'Unified Workspace', href: '/dashboard/unified-entrepreneur-intelligence-workspace', icon: CheckSquare },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Profile Roles', href: '/dashboard/settings/profile', icon: Users },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

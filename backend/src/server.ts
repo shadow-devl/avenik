@@ -49,6 +49,7 @@ import { customerExperienceRouter } from './routes/customer-experience-intellige
 import { operationsIntelligenceRouter } from './routes/operations-intelligence.js';
 import { genericIntelligenceRouter } from './routes/generic-intelligence.js';
 import { aiRouter } from './routes/ai.js';
+import { profileRouter } from './routes/profile.js';
 
 const app = express();
 
@@ -113,6 +114,7 @@ app.use('/api/customer-experience', requireAuth, customerExperienceRouter);
 app.use('/api/operations-intelligence', requireAuth, operationsIntelligenceRouter);
 app.use('/api/generic-intelligence', requireAuth, genericIntelligenceRouter);
 app.use('/api/ai', requireAuth, aiRouter);
+app.use('/api/profile', requireAuth, profileRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────

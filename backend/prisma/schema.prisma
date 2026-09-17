@@ -117,14 +117,16 @@ model VerificationToken {
 }
 
 model UserProfile {
-  userId       String   @id @map("user_id") @db.Uuid
-  firstName    String?  @map("first_name")
-  lastName     String?  @map("last_name")
-  bio          String?
-  profileImage String?  @map("profile_image")
-  timezone     String?  @default("Asia/Kolkata")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  userId        String   @id @map("user_id") @db.Uuid
+  firstName     String?  @map("first_name")
+  lastName      String?  @map("last_name")
+  bio           String?
+  profileImage  String?  @map("profile_image")
+  timezone      String?  @default("Asia/Kolkata")
+  primaryRole   String?  @map("primary_role")
+  secondaryRole String?  @map("secondary_role")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
