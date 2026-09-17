@@ -49,6 +49,7 @@ import { revenueOperationsRouter } from './routes/entrepreneur-revenue-operation
 import { customerExperienceRouter } from './routes/customer-experience-intelligence.js';
 import { operationsIntelligenceRouter } from './routes/operations-intelligence.js';
 import { genericIntelligenceRouter } from './routes/generic-intelligence.js';
+import { aiRouter } from './routes/ai.js';
 
 const app = express();
 
@@ -112,6 +113,7 @@ app.use('/api/revenue-operations', requireAuth, revenueOperationsRouter);
 app.use('/api/customer-experience', requireAuth, customerExperienceRouter);
 app.use('/api/operations-intelligence', requireAuth, operationsIntelligenceRouter);
 app.use('/api/generic-intelligence', requireAuth, genericIntelligenceRouter);
+app.use('/api/ai', requireAuth, aiRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
