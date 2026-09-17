@@ -28,8 +28,10 @@ import fraudRouter from './routes/fraud.js';
 import goalsRouter from './routes/goals.js';
 import actionsRouter from './routes/actions.js';
 import { intelligenceRouter } from './routes/intelligence.js';
+import { ecosystemRouter } from './routes/ecosystem.js';
 import { maturityRouter } from './routes/maturity.js';
 import { evolutionRouter } from './routes/evolution.js';
+import { customerIntelligenceRouter } from './routes/customer-intelligence.js';
 import { globalPlatformRouter } from './routes/global-platform.js';
 
 const app = express();
@@ -74,10 +76,11 @@ app.use('/api/trust', requireAuth, trustRouter);
 app.use('/api/fraud', requireAuth, fraudRouter);
 app.use('/api/goals', requireAuth, goalsRouter);
 app.use('/api/actions', requireAuth, actionsRouter);
-app.use('/api/intelligence', intelligenceRouter);
-app.use('/api/maturity', maturityRouter);
-app.use('/api/evolution', evolutionRouter);
-app.use('/api/global', globalPlatformRouter);
+app.use('/api/intelligence', requireAuth, intelligenceRouter);
+app.use('/api/maturity', requireAuth, maturityRouter);
+app.use('/api/evolution', requireAuth, evolutionRouter);
+app.use('/api/customer', requireAuth, customerIntelligenceRouter);
+app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {

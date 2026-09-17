@@ -48,6 +48,27 @@ function LoginContent() {
         Sign in with Microsoft
       </button>
 
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-700"></div>
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-slate-900 px-2 text-slate-400">Development Options</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setLoading(true);
+          signIn('credentials', { email: 'demo@avenik.com', callbackUrl });
+        }}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+      >
+        Sign in as Demo Entrepreneur (Local Bypass)
+      </button>
+
       <p className="text-center text-sm text-slate-500 mt-4">
         Need an account? Sign up using Google or Microsoft.
       </p>

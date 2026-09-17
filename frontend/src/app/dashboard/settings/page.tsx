@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
-import { apiPost } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { apiPost, apiGet } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { User, Building, Bell, Shield, Key } from "lucide-react";
 
@@ -11,8 +11,12 @@ export default function SettingsPage() {
   const [legalName, setLegalName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("business");
+  const [activeTab, setActiveTab] = useState("profile");
   const router = useRouter();
+
+  const [myRoles, setMyRoles] = useState<any[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
+  const [selectedNewRole, setSelectedNewRole] = useState("");
 
   const handleCreateBusiness = async () => {
     try {
@@ -26,6 +30,98 @@ export default function SettingsPage() {
       setLoading(false);
     }
   };
+
+  // Fetch roles when tab switches to profile
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      fetchRoles();
+    }
+  }, [activeTab]);
+
+  const fetchRoles = async () => {
+    try {
+      const [meRes, allRes] = await Promise.all([
+        apiGet<any>('/api/users/roles/me'),
+        apiGet<any>('/api/users/roles/available')
+      ]);
+      if (meRes.success) setMyRoles(meRes.data.map((ur: any) => ur.role));
+      if (allRes.success) setAvailableRoles(allRes.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddRole = async () => {
+    if (!selectedNewRole) return;
+    try {
+      await apiPost('/api/users/roles', { roleId: selectedNewRole });
+      setSelectedNewRole("");
+      fetchRoles();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add role");
+    }
+  };
+
+  const handleRemoveRole = async (roleId: string) => {
+    try {
+      await apiPost(`/api/users/roles/${roleId}`, undefined, { method: 'DELETE' });
+      fetchRoles();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const renderPersonalProfile = () => (
+    <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <h2 className="text-lg font-medium text-white border-b border-slate-800 pb-4 mb-6 flex items-center gap-2">
+        <User className="h-5 w-5 text-blue-400" />
+        Personal Profile & Roles
+      </h2>
+      
+      <div className="mb-8">
+        <h3 className="text-sm font-medium text-slate-300 mb-4">Your Active Roles</h3>
+        {myRoles.length === 0 ? (
+          <p className="text-sm text-slate-500">You currently have no roles assigned.</p>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {myRoles.map(role => (
+              <div key={role.id} className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg">
+                <span className="text-sm text-blue-400 font-medium">{role.name}</span>
+                <button 
+                  onClick={() => handleRemoveRole(role.id)}
+                  className="text-slate-400 hover:text-red-400 ml-2"
+                  title="Remove role"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="pt-6 border-t border-slate-800">
+        <h3 className="text-sm font-medium text-slate-300 mb-3">Add a Second Role</h3>
+        <p className="text-xs text-slate-500 mb-4">
+          Avenik supports multi-role profiles. You can be an Entrepreneur while also being an Investor or Service Provider.
+        </p>
+        <div className="flex gap-4 items-center">
+          <select 
+            value={selectedNewRole}
+            onChange={(e) => setSelectedNewRole(e.target.value)}
+            className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+          >
+            <option value="">Select a new role...</option>
+            {availableRoles.filter(ar => !myRoles.find(mr => mr.id === ar.id)).map(role => (
+              <option key={role.id} value={role.id}>{role.name}</option>
+            ))}
+          </select>
+          <Button onClick={handleAddRole} disabled={!selectedNewRole}>Add Role</Button>
+        </div>
+      </div>
+    </section>
+  );
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -91,6 +187,8 @@ export default function SettingsPage() {
             <p className="mt-1 text-slate-400">Manage your profile, roles, and connected businesses.</p>
           </div>
 
+          {activeTab === 'profile' && renderPersonalProfile()}
+
           {activeTab === 'business' && (
             <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
               <h2 className="text-lg font-medium text-white border-b border-slate-800 pb-4 mb-6">Create Business Profile</h2>
@@ -136,7 +234,7 @@ export default function SettingsPage() {
             </section>
           )}
 
-          {activeTab !== 'business' && (
+          {activeTab !== 'business' && activeTab !== 'profile' && (
             <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
                <Shield className="h-12 w-12 text-slate-700 mx-auto mb-4" />
                <h3 className="text-lg font-medium text-slate-300">Section Under Construction</h3>

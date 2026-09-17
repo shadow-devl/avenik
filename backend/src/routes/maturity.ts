@@ -5,6 +5,7 @@ import { DigitalTwinService } from '../services/maturity/digital-twin.service.js
 import { AnomalyService } from '../services/maturity/anomaly.service.js';
 import { InnovationService } from '../services/maturity/innovation.service.js';
 import { GovernanceService } from '../services/maturity/governance.service.js';
+import { success } from '../utils/response.js';
 
 const router = Router();
 
@@ -80,21 +81,21 @@ const agentEvalSchema = z.object({
 router.post('/digital-twin/sync', validate(digitalTwinSyncSchema), async (req, res, next) => {
   try {
     const twin = await DigitalTwinService.syncDigitalTwin(req.body.userId, req.body.businessId);
-    res.json({ status: 'success', data: twin });
+    success(res, twin);
   } catch (error) { next(error); }
 });
 
 router.get('/digital-twin', validate(digitalTwinSyncSchema, 'query'), async (req, res, next) => {
   try {
     const twin = await DigitalTwinService.getDigitalTwin(req.query.userId as string, req.query.businessId as string);
-    res.json({ status: 'success', data: twin });
+    success(res, twin);
   } catch (error) { next(error); }
 });
 
 router.put('/digital-twin/preferences', validate(preferencesSchema), async (req, res, next) => {
   try {
     const twin = await DigitalTwinService.updatePreferences(req.body.userId, req.body.businessId, req.body.preferences);
-    res.json({ status: 'success', data: twin });
+    success(res, twin);
   } catch (error) { next(error); }
 });
 

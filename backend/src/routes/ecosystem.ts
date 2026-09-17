@@ -5,6 +5,7 @@ import { ContextService } from '../services/context.service.js';
 import { EcosystemDiscoveryService } from '../services/ecosystem/ecosystem-discovery.service.js';
 import { EcosystemRelationshipService } from '../services/ecosystem/ecosystem-relationship.service.js';
 import { prisma } from '../db.js';
+import { success } from '../utils/response.js';
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.get(
       await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
       const matches = await EcosystemDiscoveryService.discoverMatches(businessId as string);
-      res.json({ status: 'success', data: matches });
+      success(res, matches);
     } catch (error) {
       next(error);
     }
@@ -70,7 +71,7 @@ router.post(
         message
       );
 
-      res.json({ status: 'success', data: rel });
+      success(res, rel, "Connection Requested", 201);
     } catch (error) {
       next(error);
     }
@@ -94,7 +95,7 @@ router.post(
       // In a real impl, we'd verify that `relationshipId` targets `businessId`.
       const rel = await EcosystemRelationshipService.consentConnection(relationshipId);
 
-      res.json({ status: 'success', data: rel });
+      success(res, rel, "Connection Accepted");
     } catch (error) {
       next(error);
     }

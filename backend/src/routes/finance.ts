@@ -38,7 +38,7 @@ router.get(
       await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
       const gapInfo = await CapitalService.calculateCapitalGap(businessId as string);
-      res.json({ status: 'success', data: gapInfo });
+      res.json({ success: true, data: gapInfo });
     } catch (error) {
       next(error);
     }
@@ -58,7 +58,7 @@ router.get(
       await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
       const readiness = await CapitalService.assessReadiness(businessId as string);
-      res.json({ status: 'success', data: readiness });
+      res.json({ success: true, data: readiness });
     } catch (error) {
       next(error);
     }
@@ -78,7 +78,7 @@ router.post(
       await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
 
       const scenario = ScenarioService.calculateDebtScenario(principal, annualInterestRate, tenureMonths);
-      res.json({ status: 'success', data: scenario });
+      res.json({ success: true, data: scenario });
     } catch (error) {
       next(error);
     }
