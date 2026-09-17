@@ -13,7 +13,7 @@ export default {
     MicrosoftEntraID({
       clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID || "missing_ms_client_id",
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET || "missing_ms_secret",
-      issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER || "missing_ms_issuer",
+      issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER || "https://login.microsoftonline.com/common/v2.0",
     }),
     Credentials({
       name: "Development Login",
