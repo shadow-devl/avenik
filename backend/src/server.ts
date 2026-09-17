@@ -44,6 +44,7 @@ import { businessIntelligenceRouter } from './routes/business-intelligence.js';
 import { resourceIntelligenceRouter } from './routes/resource-intelligence.js';
 import { advancedSupportRouter } from './routes/advanced-government-support-execution.js';
 import { trustedIntelligenceRouter } from './routes/avenik-trusted-intelligence.js';
+import { unifiedWorkspaceRouter } from './routes/unified-workspace.js';
 
 const app = express();
 
@@ -102,6 +103,7 @@ app.use('/api/business-intelligence', requireAuth, businessIntelligenceRouter);
 app.use('/api/resource-intelligence', requireAuth, resourceIntelligenceRouter);
 app.use('/api/advanced-government-support', requireAuth, advancedSupportRouter);
 app.use('/api/trusted-intelligence', requireAuth, trustedIntelligenceRouter);
+app.use('/api/unified-workspace', requireAuth, unifiedWorkspaceRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
