@@ -1,19 +1,27 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
+import { MarketIntelligenceService } from '../services/market/market-intelligence.service.js';
+import { success } from '../utils/response.js';
 
 const router = Router();
 
-// GET /api/market-intelligence
-router.get('/', requireAuth, async (req, res, next) => {
+const businessQuerySchema = z.object({
+  businessId: z.string().uuid(),
+});
+
+router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      message: 'Market Intelligence module loaded successfully',
-      phase: '1.17'
-    });
+    const { businessId } = req.query;
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
+
+    const metrics = await MarketIntelligenceService.getMarketMetrics(businessId as string);
+    success(res, metrics);
   } catch (error) {
     next(error);
   }
 });
 
-export default router;
+export const marketIntelligenceRouter = router;

@@ -33,6 +33,8 @@ import { maturityRouter } from './routes/maturity.js';
 import { evolutionRouter } from './routes/evolution.js';
 import { customerIntelligenceRouter } from './routes/customer-intelligence.js';
 import { globalPlatformRouter } from './routes/global-platform.js';
+import { operationsIntelligenceRouter } from './routes/operations-intelligence.js';
+import { marketIntelligenceRouter } from './routes/market-intelligence.js';
 
 const app = express();
 
@@ -80,6 +82,8 @@ app.use('/api/intelligence', requireAuth, intelligenceRouter);
 app.use('/api/maturity', requireAuth, maturityRouter);
 app.use('/api/evolution', requireAuth, evolutionRouter);
 app.use('/api/customer', requireAuth, customerIntelligenceRouter);
+app.use('/api/operations', requireAuth, operationsIntelligenceRouter);
+app.use('/api/market', requireAuth, marketIntelligenceRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
