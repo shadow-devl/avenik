@@ -1,42 +1,49 @@
 ﻿import { prisma } from '../../db.js';
+import { ai } from '../../lib/gemini.js';
 
 export class MarketIntelligenceService {
-  static async getMarketMetrics(businessId: string) {
-    const intel = await prisma.competitiveIntel.findMany({
-      where: { businessId },
-      orderBy: { createdAt: 'desc' },
-      take: 10
+  static async analyze(businessId: string) {
+    const plans = await prisma.commercialExpansionPlan.findMany({ where: { businessId }, include: { segments: true }, take: 3 });
+    const innovations = await prisma.innovationRecord.findMany({ where: { businessId, status: 'ACTIVE' }, take: 5 });
+
+    const context = JSON.stringify({
+      expansionPlans: plans.map(p => ({ market: p.targetMarket, segments: p.segments.map(s => s.name) })),
+      activeInnovations: innovations.map(i => i.title)
     });
 
-    const plans = await prisma.commercialExpansionPlan.findMany({
-      where: { businessId },
-      orderBy: { createdAt: 'desc' },
-      take: 5
+    const prompt = `
+You are AVENIK's Market Intelligence AI.
+Analyze the target markets, customer segments, and active product innovations.
+Generate a competitive landscape and market positioning strategy.
+
+Context:
+${context}
+
+Respond EXACTLY with a JSON object in this format:
+{
+  "summary": "2-3 sentences explaining the market positioning.",
+  "marketOpportunityScore": number (0-100),
+  "competitorThreats": [
+    {
+      "threatType": "Type of competitive threat (e.g., Price War, Feature Parity)",
+      "severity": "HIGH" | "MEDIUM" | "LOW",
+      "mitigation": "How to defend against it"
+    }
+  ],
+  "growthVectors": [
+    {
+      "vector": "Where to expand next",
+      "rationale": "Why this aligns with current innovations and markets"
+    }
+  ]
+}
+`.trim();
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json", temperature: 0.3 }
     });
-
-    const marketShareThreats = intel.filter(i => i.domain === 'MARKET_SHARE' && i.confidence > 0.7).length;
-    const expansionOpportunities = plans.filter(p => p.status === 'DRAFT' || p.status === 'EVALUATING').length;
-
-    let marketPosition = 50 + (expansionOpportunities * 10) - (marketShareThreats * 15);
-    marketPosition = Math.max(0, Math.min(100, marketPosition));
-
-    return {
-      marketPositionScore: marketPosition,
-      activeCompetitors: [...new Set(intel.map(i => i.competitorName))],
-      insights: intel.map(i => ({
-        id: i.id,
-        competitor: i.competitorName,
-        domain: i.domain,
-        insight: i.insight,
-        confidence: i.confidence,
-        date: i.createdAt
-      })),
-      expansionPlans: plans.map(p => ({
-        id: p.id,
-        market: p.targetMarket,
-        status: p.status,
-        investment: p.investmentNeeded
-      }))
-    };
+    return JSON.parse(response.text!);
   }
 }

@@ -1,183 +1,94 @@
-"use client";
-
+﻿"use client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { apiGet } from '@/lib/api';
-import { Users, AlertCircle, Target, Briefcase, Activity } from "lucide-react";
+import { Button } from '@/components/ui/Button';
+import { apiGet, apiPost } from '@/lib/api';
+import { Users, BrainCircuit, Target, Briefcase } from "lucide-react";
 
-export default function HumanCapitalIntelligencePage() {
+export default function HumanCapitalPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [talent, setTalent] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+    if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated" && session?.user?.id) {
-      fetchMetrics();
+      apiGet<any>('/api/context/current').then(ctx => {
+        if (ctx.success && ctx.data.business) setBusinessId(ctx.data.business.id);
+      });
     }
   }, [status, router, session]);
 
-  async function fetchMetrics() {
+  async function runAudit() {
+    if (!businessId) return;
+    setIsProcessing(true);
     try {
-      setLoading(true);
-      const ctx = await apiGet<any>('/api/context/current');
-      if (ctx.success && ctx.data.business) {
-        const bid = ctx.data.business.id;
-        const res = await apiGet<any>(`/api/workforce/metrics?businessId=${bid}`);
-        if (res.success) {
-          setMetrics(res.data);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await apiPost<any>('/api/human-capital-intelligence/analyze', { businessId });
+      if (res.success) setTalent(res.data);
+    } finally { setIsProcessing(false); }
   }
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Aggregating Human Capital Intelligence...</div>;
+  if (status === "loading") return <div className="p-8 text-slate-400">Loading Talent...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12">
-      <nav className="border-b border-slate-800 bg-slate-900/50">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-              <span className="text-blue-400">A</span>venik
-            </Link>
-            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
-              Human Capital Intelligence
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white">
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
+      <nav className="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex justify-between">
+        <Link href="/dashboard" className="text-xl font-bold tracking-tight text-pink-400">Avenik Human Capital</Link>
+        <Link href="/dashboard" className="text-sm text-slate-400">Back</Link>
       </nav>
-
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <Users className="h-8 w-8 text-blue-400" />
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Human Capital Intelligence</h1>
-            <p className="mt-1 text-slate-400">Workforce capacity, capability gaps, and team utilization.</p>
+      <main className="mx-auto max-w-5xl px-6 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex gap-3 items-center">
+            <Users className="h-8 w-8 text-pink-400" />
+            <h1 className="text-3xl font-bold text-white">Human Capital Intelligence</h1>
           </div>
+          <Button onClick={runAudit} disabled={isProcessing} className="bg-pink-600 hover:bg-pink-700 text-white flex gap-2">
+            <BrainCircuit className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} /> Analyze Talent Map
+          </Button>
         </div>
 
-        {!metrics ? (
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
-            <h2 className="text-lg font-medium text-white">System Initializing</h2>
-            <p className="mt-2 text-sm text-slate-400">Connecting to your live workforce data.</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Workforce Health</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-white">{metrics.workforceHealth}%</h3>
-                  <div className={`p-1.5 rounded-lg mb-1`}>
-                    <Activity className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Current Capacity</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-blue-400">{metrics.totalFTE}</h3>
-                  <span className="text-sm text-slate-500 mb-1">FTEs</span>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Required Capacity</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-purple-400">{metrics.requiredFTE}</h3>
-                  <span className="text-sm text-slate-500 mb-1">FTEs</span>
-                </div>
-              </Card>
-
-              <Card className="p-6 bg-slate-900/50 border-slate-800">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Overloaded Roles</p>
-                <div className="flex items-end gap-3">
-                  <h3 className="text-3xl font-bold text-rose-400">{metrics.overloadedRoles}</h3>
-                  <div className="p-1.5 rounded-lg mb-1 bg-rose-500/10 text-rose-400">
-                    <AlertCircle className="h-4 w-4" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {talent && (
+          <div className="space-y-6 animate-in fade-in">
+            <Card className="p-6 bg-pink-950/20 border-pink-500/20 flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-4xl font-black text-white">{talent.talentHealthScore}</div>
+                <div className="text-xs text-slate-400 uppercase">Talent Score</div>
+              </div>
+              <div className="flex-1 text-slate-300 text-lg">{talent.summary}</div>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <div>
-                <h2 className="text-xl font-bold text-white mb-4">Capacity Utilization</h2>
-                {metrics.capacities.length === 0 ? (
-                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-                    <p className="text-sm text-slate-400">No role capacities recorded.</p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {metrics.capacities.map((cap: any) => (
-                      <Card key={cap.id} className="p-4 bg-slate-900 border-slate-800">
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="w-4 h-4 text-slate-400" />
-                            <h4 className="font-semibold text-white">{cap.role}</h4>
-                          </div>
-                          {cap.isOverloaded && (
-                            <span className="text-[10px] uppercase px-2 py-1 rounded-full bg-rose-500/10 text-rose-400 font-medium">
-                              Overloaded
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">Current: {cap.current} FTE</span>
-                          <span className="text-slate-400">Required: {cap.required} FTE</span>
-                        </div>
-                        <div className="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden">
-                          <div 
-                            className={`h-full`} 
-                            style={{ width: `${Math.min(100, (cap.current / cap.required) * 100)}%` }}
-                          />
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><Briefcase className="h-5 w-5 text-pink-400"/> Critical Hires</h3>
+                <div className="space-y-3">
+                  {talent.criticalHires?.map((h: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-pink-500">
+                      <div className="flex justify-between">
+                        <div className="font-bold text-white mb-1">{h.role}</div>
+                        <div className="text-xs font-bold text-pink-400">{h.urgency}</div>
+                      </div>
+                      <div className="text-sm text-slate-400 mt-2">{h.reason}</div>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-white mb-4">Capability Gaps</h2>
-                {metrics.capabilityGaps.length === 0 ? (
-                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-                    <Target className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">No critical capability gaps identified.</p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {metrics.capabilityGaps.map((gap: any) => (
-                      <Card key={gap.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-slate-200">{gap.skill}</h4>
-                          <p className="text-xs text-slate-500 mt-1">L{gap.current} → L{gap.required}</p>
-                        </div>
-                        <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-400">
-                          Gap: {gap.required - gap.current} Levels
-                        </span>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-white flex gap-2 items-center mb-4"><Target className="h-5 w-5 text-purple-400"/> Upskilling Tracks</h3>
+                <div className="space-y-3">
+                  {talent.upskillingTracks?.map((u: any, i: number) => (
+                    <Card key={i} className="p-4 bg-slate-900 border-slate-800 border-l-2 border-purple-500">
+                      <div className="font-bold text-white mb-1">{u.targetGroup}</div>
+                      <div className="text-xs text-purple-400 font-bold uppercase mb-2">Focus: {u.focusArea}</div>
+                      <div className="text-sm text-slate-300">{u.impact}</div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

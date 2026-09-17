@@ -79,6 +79,7 @@ import { productManagementRouter } from './routes/product-management.js';
 import { sustainabilityRouter } from './routes/sustainability.js';
 import { productionHubRouter } from './routes/production-hub.js';
 import { legalRouter } from './routes/legal.js';
+import { humanCapitalIntelligenceRouter } from './routes/human-capital-intelligence.js';
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
@@ -132,6 +133,7 @@ app.use('/api/product-management', requireAuth, productManagementRouter);
 app.use('/api/sustainability', requireAuth, sustainabilityRouter);
 app.use('/api/production-hub', requireAuth, productionHubRouter);
 app.use('/api/legal', requireAuth, legalRouter);
+app.use('/api/human-capital-intelligence', requireAuth, humanCapitalIntelligenceRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
