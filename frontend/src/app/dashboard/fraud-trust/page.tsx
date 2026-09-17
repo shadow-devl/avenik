@@ -1,18 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { apiGet, apiPost } from '@/lib/api';
-import { ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
+import { apiGet } from '@/lib/api';
+import { Activity, Target, Zap, Clock, ShieldCheck } from "lucide-react";
 
-export default function FraudAndTrustPage() {
+export default function FraudTrustPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [fraudCases, setFraudCases] = useState<any[]>([]);
-  const [trustClaims, setTrustClaims] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,24 +20,20 @@ export default function FraudAndTrustPage() {
       router.push("/login");
     }
     if (status === "authenticated" && session?.user?.id) {
-      fetchData();
+      fetchMetrics();
     }
   }, [status, router, session]);
 
-  async function fetchData() {
+  async function fetchMetrics() {
     try {
       setLoading(true);
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        
-        const [fraudRes, trustRes] = await Promise.all([
-          apiGet<any>('/api/fraud', { headers: { 'x-business-id': bid } }),
-          apiGet<any>('/api/trust/verification', { headers: { 'x-business-id': bid } })
-        ]);
-
-        if (fraudRes.success) setFraudCases(fraudRes.data);
-        if (trustRes.success) setTrustClaims(trustRes.data);
+        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=fraud-trust`);
+        if (res.success) {
+          setMetrics(res.data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -46,106 +42,136 @@ export default function FraudAndTrustPage() {
     }
   }
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Fraud & Trust metrics...</div>;
-
-  const trustScore = 100 - (fraudCases.length * 15) + (trustClaims.filter(c => c.status === 'VERIFIED').length * 10);
-  const normalizedScore = Math.max(0, Math.min(100, trustScore));
+  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Fraud Trust...</div>;
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Fraud & Trust Metrics</h1>
-        <p className="text-slate-400 mt-2">Monitor verification claims, active fraud cases, and your trust score.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-slate-900/50 border-slate-800">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Trust Score</p>
-              <h3 className="text-3xl font-bold text-white mt-1">{normalizedScore}/100</h3>
-            </div>
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
+    <div className="min-h-screen bg-slate-950 pb-12">
+      <nav className="border-b border-slate-800 bg-slate-900/50">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-8">
+            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
+              <span className="text-blue-400">A</span>venik
+            </Link>
+            <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
+              Fraud Trust
+            </span>
           </div>
-          <p className="text-xs text-slate-500">Based on verifications and fraud history</p>
-        </Card>
-
-        <Card className="p-6 bg-slate-900/50 border-slate-800">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Fraud Cases</p>
-              <h3 className="text-3xl font-bold text-rose-400 mt-1">{fraudCases.length}</h3>
-            </div>
-            <div className="p-2 bg-rose-500/10 rounded-lg">
-              <ShieldAlert className="h-5 w-5 text-rose-400" />
-            </div>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white">
+              Back to Dashboard
+            </Link>
           </div>
-          <p className="text-xs text-slate-500">Reported issues affecting reputation</p>
-        </Card>
+        </div>
+      </nav>
 
-        <Card className="p-6 bg-slate-900/50 border-slate-800">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Verifications</p>
-              <h3 className="text-3xl font-bold text-blue-400 mt-1">{trustClaims.length}</h3>
-            </div>
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <ShieldCheck className="h-5 w-5 text-blue-400" />
-            </div>
+      <main className="mx-auto max-w-6xl px-6 py-12">
+        <div className="flex items-center gap-3 mb-8">
+          <Activity className="h-8 w-8 text-blue-400" />
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Fraud Trust</h1>
+            <p className="mt-1 text-slate-400">Real-time intelligence and execution telemetry.</p>
           </div>
-          <p className="text-xs text-slate-500">Total submitted claims</p>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">Trust Verifications</h2>
-          {trustClaims.length === 0 ? (
-            <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-              <p className="text-sm text-slate-400">No verification claims submitted.</p>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {trustClaims.map((claim: any) => (
-                <Card key={claim.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-medium text-white">{claim.type}</h4>
-                    <p className="text-xs text-slate-500">Date: {new Date(claim.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full">
-                    {claim.status}
-                  </span>
-                </Card>
-              ))}
-            </div>
-          )}
         </div>
 
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">Fraud Cases</h2>
-          {fraudCases.length === 0 ? (
-            <Card className="p-6 bg-slate-900 border-slate-800 text-center">
-              <p className="text-sm text-slate-400">No fraud cases reported.</p>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {fraudCases.map((fcase: any) => (
-                <Card key={fcase.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-medium text-white">{fcase.type}</h4>
-                    <p className="text-sm text-slate-400">{fcase.details}</p>
+        {!metrics ? (
+          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
+            <h2 className="text-lg font-medium text-white">System Initializing</h2>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Module Health</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-white">{metrics.overview.healthScore}/100</h3>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Active Signals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-blue-400">{metrics.overview.activeSignals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-blue-500/10 text-blue-400">
+                    <Zap className="h-4 w-4" />
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full">
-                    {fcase.severity}
-                  </span>
-                </Card>
-              ))}
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pending Actions</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-amber-400">{metrics.overview.pendingActions}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-amber-500/10 text-amber-400">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Associated Goals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-purple-400">{metrics.overview.associatedGoals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-purple-500/10 text-purple-400">
+                    <Target className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
             </div>
-          )}
-        </div>
-      </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Intelligence Signals</h2>
+                {metrics.recentSignals.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No active signals.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentSignals.map((sig: any) => (
+                      <Card key={sig.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-white">{sig.title}</h4>
+                          <span className="text-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded border bg-slate-800 text-slate-400 border-slate-700">
+                            {sig.type}
+                          </span>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-blue-400">
+                          {sig.impact} IMPACT
+                        </span>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Execution Actions</h2>
+                {metrics.recentActions.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No execution actions pending.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentActions.map((act: any) => (
+                      <Card key={act.id} className="p-4 bg-slate-900 border-slate-800">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-slate-200">{act.title}</h4>
+                          <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            {act.status}
+                          </span>
+                        </div>
+                        <div className="text-xs mt-2 text-slate-500">
+                          Priority: {act.priority}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

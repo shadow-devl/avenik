@@ -5,38 +5,34 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { apiGet, apiPost } from '@/lib/api';
+import { apiGet } from '@/lib/api';
+import { Activity, Target, Zap, Clock, ShieldCheck } from "lucide-react";
 
 export default function AdvancedFundingReadinessPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [fundingRequests, setFundingRequests] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
-  const [amount, setAmount] = useState("");
-  const [purpose, setPurpose] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
-    if (status === "authenticated") {
-      fetchFundingData();
+    if (status === "authenticated" && session?.user?.id) {
+      fetchMetrics();
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
-  async function fetchFundingData() {
+  async function fetchMetrics() {
     try {
       setLoading(true);
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        
-        const res = await apiGet<any>('/api/funding/requests', { headers: { 'x-business-id': bid } });
+        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=advanced-funding-readiness`);
         if (res.success) {
-          setFundingRequests(res.data);
+          setMetrics(res.data);
         }
       }
     } catch (err) {
@@ -46,30 +42,10 @@ export default function AdvancedFundingReadinessPage() {
     }
   }
 
-  async function createFundingRequest() {
-    try {
-      const ctx = await apiGet<any>('/api/context/current');
-      if (ctx.success && ctx.data.business) {
-        const bid = ctx.data.business.id;
-        await apiPost<any>('/api/funding/requests', {
-          amount: parseFloat(amount),
-          purpose: purpose,
-          instrumentType: "EQUITY"
-        }, { headers: { 'x-business-id': bid } });
-        setAmount("");
-        setPurpose("");
-        fetchFundingData();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create funding request");
-    }
-  }
-
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Funding Intelligence...</div>;
+  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Advanced Funding Readiness...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 pb-12">
       <nav className="border-b border-slate-800 bg-slate-900/50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
@@ -89,79 +65,112 @@ export default function AdvancedFundingReadinessPage() {
       </nav>
 
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Advanced Funding Readiness</h1>
-          <p className="text-slate-400 mt-2">AI-driven readiness assessments and capital allocation.</p>
+        <div className="flex items-center gap-3 mb-8">
+          <Activity className="h-8 w-8 text-blue-400" />
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Advanced Funding Readiness</h1>
+            <p className="mt-1 text-slate-400">Real-time intelligence and execution telemetry.</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="p-6 border-slate-800 bg-slate-900/50">
-              <h2 className="text-lg font-medium text-white mb-2">New Internal Readiness Assessment</h2>
-              <p className="text-xs text-slate-500 mb-4 uppercase">Internal Platform Only • No External Submission</p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">Target Amount ($)</label>
-                  <input 
-                    type="number" 
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">Purpose / Use of Funds</label>
-                  <input 
-                    type="text" 
-                    value={purpose}
-                    onChange={e => setPurpose(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none" 
-                  />
-                </div>
-                <Button onClick={createFundingRequest} className="w-full" disabled={!amount || !purpose}>Initiate Internal Assessment</Button>
-              </div>
-            </Card>
+        {!metrics ? (
+          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
+            <h2 className="text-lg font-medium text-white">System Initializing</h2>
           </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Module Health</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-white">{metrics.overview.healthScore}/100</h3>
+                </div>
+              </Card>
 
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-semibold text-white">Internal Funding Readiness Records</h2>
-            <Card className="p-0 overflow-hidden border-slate-800 bg-slate-900/50">
-              {fundingRequests.length === 0 ? (
-                <div className="p-12 text-center text-slate-400">No active readiness assessments found. Initiate an assessment to begin.</div>
-              ) : (
-                <div className="divide-y divide-slate-800">
-                  {fundingRequests.map((req: any) => (
-                    <div key={req.id} className="p-6">
-                      <div className="flex justify-between items-start mb-2">
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Active Signals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-blue-400">{metrics.overview.activeSignals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-blue-500/10 text-blue-400">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pending Actions</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-amber-400">{metrics.overview.pendingActions}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-amber-500/10 text-amber-400">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Associated Goals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-purple-400">{metrics.overview.associatedGoals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-purple-500/10 text-purple-400">
+                    <Target className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Intelligence Signals</h2>
+                {metrics.recentSignals.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No active signals.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentSignals.map((sig: any) => (
+                      <Card key={sig.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
                         <div>
-                          <h3 className="font-semibold text-white text-lg">${req.amount.toLocaleString()}</h3>
-                          <p className="text-sm text-slate-400">{req.purpose}</p>
+                          <h4 className="font-medium text-white">{sig.title}</h4>
+                          <span className="text-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded border bg-slate-800 text-slate-400 border-slate-700">
+                            {sig.type}
+                          </span>
                         </div>
-                        <span className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-xs font-medium border border-blue-500/20">{req.status}</span>
-                      </div>
-                      
-                      {req.options && req.options.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-slate-800/50">
-                          <h4 className="text-sm font-medium text-slate-300 mb-2">Matched Funding Options:</h4>
-                          <ul className="space-y-2">
-                            {req.options.map((opt: any) => (
-                              <li key={opt.id} className="text-sm text-slate-400 flex justify-between">
-                                <span>{opt.providerName} - {opt.instrumentType}</span>
-                                <span className="text-emerald-400 font-medium">Match: {opt.matchScore * 100}%</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+                        <span className="text-[10px] uppercase font-bold text-blue-400">
+                          {sig.impact} IMPACT
+                        </span>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        </div>
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Execution Actions</h2>
+                {metrics.recentActions.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No execution actions pending.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentActions.map((act: any) => (
+                      <Card key={act.id} className="p-4 bg-slate-900 border-slate-800">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-slate-200">{act.title}</h4>
+                          <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            {act.status}
+                          </span>
+                        </div>
+                        <div className="text-xs mt-2 text-slate-500">
+                          Priority: {act.priority}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

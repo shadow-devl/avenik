@@ -1,4 +1,34 @@
-"use client";
+﻿const fs = require('fs');
+const path = require('path');
+
+const dashboardPath = path.join(__dirname, 'frontend/src/app/dashboard');
+
+const excludeDirs = [
+  'cybersecurity',
+  'customer-loyalty',
+  'ecosystem-opportunity-portfolio-intelligence',
+  'financial-intelligence',
+  'human-capital-intelligence',
+  'government-scheme-application-success',
+  'avenik-decision-intelligence',
+  'marketing-intelligence',
+  'business-intelligence',
+  'resource-intelligence',
+  'advanced-government-support-execution',
+  'avenik-trusted-intelligence',
+  'unified-entrepreneur-intelligence-workspace',
+  'entrepreneur-revenue-operations',
+  'customer-experience-intelligence',
+  'operations-intelligence',
+  'schemes'
+];
+
+function toTitleCase(str) {
+  return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function getTemplate(folderName, title) {
+  return `"use client";
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -8,7 +38,7 @@ import { Card } from '@/components/ui/Card';
 import { apiGet } from '@/lib/api';
 import { Activity, Target, Zap, Clock, ShieldCheck } from "lucide-react";
 
-export default function ProductManagementPage() {
+export default function ${title.replace(/\s+/g, '')}Page() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
@@ -30,7 +60,7 @@ export default function ProductManagementPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=product-management`);
+        const res = await apiGet<any>(\`/api/generic-intelligence/metrics?businessId=\${bid}&domain=${folderName}\`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -42,7 +72,7 @@ export default function ProductManagementPage() {
     }
   }
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Product Management...</div>;
+  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading ${title}...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12">
@@ -53,7 +83,7 @@ export default function ProductManagementPage() {
               <span className="text-blue-400">A</span>venik
             </Link>
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
-              Product Management
+              ${title}
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -68,7 +98,7 @@ export default function ProductManagementPage() {
         <div className="flex items-center gap-3 mb-8">
           <Activity className="h-8 w-8 text-blue-400" />
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Product Management</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">${title}</h1>
             <p className="mt-1 text-slate-400">Real-time intelligence and execution telemetry.</p>
           </div>
         </div>
@@ -175,3 +205,21 @@ export default function ProductManagementPage() {
     </div>
   );
 }
+`;
+}
+
+fs.readdirSync(dashboardPath, { withFileTypes: true }).forEach(dirent => {
+  if (dirent.isDirectory()) {
+    const dirName = dirent.name;
+    if (!excludeDirs.includes(dirName) && dirName !== 'admin') {
+      const pagePath = path.join(dashboardPath, dirName, 'page.tsx');
+      if (fs.existsSync(pagePath)) {
+          const title = toTitleCase(dirName);
+          const content = getTemplate(dirName, title);
+          
+          fs.writeFileSync(pagePath, content, 'utf8');
+          console.log(`Updated: ${dirName}`);
+      }
+    }
+  }
+});

@@ -48,6 +48,7 @@ import { unifiedWorkspaceRouter } from './routes/unified-workspace.js';
 import { revenueOperationsRouter } from './routes/entrepreneur-revenue-operations.js';
 import { customerExperienceRouter } from './routes/customer-experience-intelligence.js';
 import { operationsIntelligenceRouter } from './routes/operations-intelligence.js';
+import { genericIntelligenceRouter } from './routes/generic-intelligence.js';
 
 const app = express();
 
@@ -110,6 +111,7 @@ app.use('/api/unified-workspace', requireAuth, unifiedWorkspaceRouter);
 app.use('/api/revenue-operations', requireAuth, revenueOperationsRouter);
 app.use('/api/customer-experience', requireAuth, customerExperienceRouter);
 app.use('/api/operations-intelligence', requireAuth, operationsIntelligenceRouter);
+app.use('/api/generic-intelligence', requireAuth, genericIntelligenceRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────

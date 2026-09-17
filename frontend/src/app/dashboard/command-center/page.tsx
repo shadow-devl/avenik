@@ -5,47 +5,35 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { apiGet, apiPost } from '@/lib/api';
+import { apiGet } from '@/lib/api';
+import { Activity, Target, Zap, Clock, ShieldCheck } from "lucide-react";
 
 export default function CommandCenterPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [warnings, setWarnings] = useState<any[]>([]);
-  const [nbas, setNbas] = useState<any[]>([]);
-  const [actions, setActions] = useState<any[]>([]);
-  const [healthScore, setHealthScore] = useState<number | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
-    if (status === "authenticated") {
-      fetchCommandCenterData();
+    if (status === "authenticated" && session?.user?.id) {
+      fetchMetrics();
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
-  async function fetchCommandCenterData() {
+  async function fetchMetrics() {
     try {
       setLoading(true);
-      // Determine business context first
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        
-        const [warnRes, nbaRes, actRes, healthRes] = await Promise.all([
-          apiGet<any>('/api/warnings', { headers: { 'x-business-id': bid } }),
-          apiPost<any>('/api/nba/generate', { businessId: bid }),
-          apiGet<any>('/api/actions', { headers: { 'x-business-id': bid } }),
-          apiPost<any>('/api/health-engine/calculate', { businessId: bid }),
-        ]);
-        
-        if (warnRes.success) setWarnings(warnRes.data);
-        if (nbaRes.success) setNbas(nbaRes.data);
-        if (actRes.success) setActions(actRes.data);
-        if (healthRes.success) setHealthScore(healthRes.data.score);
+        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=command-center`);
+        if (res.success) {
+          setMetrics(res.data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -55,12 +43,9 @@ export default function CommandCenterPage() {
   }
 
   if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Command Center...</div>;
-  if (!healthScore && actions.length === 0 && warnings.length === 0 && nbas.length === 0) {
-    return <div className="p-8 text-center text-slate-400">You must create a business profile to view the Command Center.</div>;
-  }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 pb-12">
       <nav className="border-b border-slate-800 bg-slate-900/50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
@@ -80,76 +65,112 @@ export default function CommandCenterPage() {
       </nav>
 
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <h1 className="text-2xl font-semibold text-white">Command Center</h1>
-        <p className="mt-1 text-slate-400">Unified intelligence and orchestration for your business.</p>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="p-6 border-blue-500/20 bg-slate-900/50">
-            <h2 className="text-lg font-medium text-white mb-2">Business Health</h2>
-            <p className="text-3xl font-bold text-blue-400">{healthScore !== null ? healthScore : '--'}</p>
-          </Card>
-          
-          <Card className="p-6 border-red-500/20 bg-slate-900/50">
-            <h2 className="text-lg font-medium text-white mb-2">Active Warnings</h2>
-            <p className="text-3xl font-bold text-red-400">{warnings.length}</p>
-          </Card>
-          
-          <Card className="p-6 border-amber-500/20 bg-slate-900/50">
-            <h2 className="text-lg font-medium text-white mb-2">Recommendations</h2>
-            <p className="text-3xl font-bold text-amber-400">{nbas.length}</p>
-          </Card>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">System Warnings</h2>
-            <Card className="p-0 overflow-hidden border-slate-800 bg-slate-900/50">
-              {warnings.length === 0 ? (
-                <div className="p-6 text-center text-slate-400">No active warnings.</div>
-              ) : (
-                <div className="divide-y divide-slate-800">
-                  {warnings.map(w => (
-                    <div key={w.id} className="p-5">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-semibold text-red-400">{w.indicator}</h4>
-                        <span className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded-full">{w.severity}</span>
-                      </div>
-                      <p className="text-sm text-slate-300 mt-2">{w.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">Pending Actions</h2>
-            <Card className="p-0 overflow-hidden border-slate-800 bg-slate-900/50">
-              {actions.length === 0 ? (
-                <div className="p-6 text-center text-slate-400">No pending actions.</div>
-              ) : (
-                <div className="divide-y divide-slate-800">
-                  {actions.map(a => (
-                    <div key={a.id} className="p-5">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-semibold text-white">{a.title}</h4>
-                        <span className="text-xs px-2 py-1 bg-blue-500/10 text-blue-400 rounded-full">{a.status}</span>
-                      </div>
-                      <p className="text-sm text-slate-400 mt-1">{a.type}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+        <div className="flex items-center gap-3 mb-8">
+          <Activity className="h-8 w-8 text-blue-400" />
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Command Center</h1>
+            <p className="mt-1 text-slate-400">Real-time intelligence and execution telemetry.</p>
           </div>
         </div>
-        
-        <div className="mt-8">
-          <Card className="p-6 text-center border-slate-800 bg-slate-900/50">
-            <h3 className="text-lg font-medium text-slate-300 mb-2">Unavailable Domains</h3>
-            <p className="text-sm text-slate-500">Risk, Strategy, and specific Funding integrations are currently disconnected or unavailable in this environment.</p>
-          </Card>
-        </div>
+
+        {!metrics ? (
+          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
+            <h2 className="text-lg font-medium text-white">System Initializing</h2>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Module Health</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-white">{metrics.overview.healthScore}/100</h3>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Active Signals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-blue-400">{metrics.overview.activeSignals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-blue-500/10 text-blue-400">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pending Actions</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-amber-400">{metrics.overview.pendingActions}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-amber-500/10 text-amber-400">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Associated Goals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-purple-400">{metrics.overview.associatedGoals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-purple-500/10 text-purple-400">
+                    <Target className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Intelligence Signals</h2>
+                {metrics.recentSignals.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No active signals.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentSignals.map((sig: any) => (
+                      <Card key={sig.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-white">{sig.title}</h4>
+                          <span className="text-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded border bg-slate-800 text-slate-400 border-slate-700">
+                            {sig.type}
+                          </span>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-blue-400">
+                          {sig.impact} IMPACT
+                        </span>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Execution Actions</h2>
+                {metrics.recentActions.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No execution actions pending.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentActions.map((act: any) => (
+                      <Card key={act.id} className="p-4 bg-slate-900 border-slate-800">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-slate-200">{act.title}</h4>
+                          <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            {act.status}
+                          </span>
+                        </div>
+                        <div className="text-xs mt-2 text-slate-500">
+                          Priority: {act.priority}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

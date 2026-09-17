@@ -5,36 +5,34 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { apiGet, apiPost } from '@/lib/api';
-import { TrendingUp, Activity } from 'lucide-react';
+import { apiGet } from '@/lib/api';
+import { Activity, Target, Zap, Clock, ShieldCheck } from "lucide-react";
 
 export default function ForecastingIntelligencePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [forecasts, setForecasts] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
-    if (status === "authenticated") {
-      fetchForecasts();
+    if (status === "authenticated" && session?.user?.id) {
+      fetchMetrics();
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
-  async function fetchForecasts() {
+  async function fetchMetrics() {
     try {
       setLoading(true);
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        
-        const res = await apiGet<any>('/api/forecasts', { headers: { 'x-business-id': bid } });
+        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=forecasting-intelligence`);
         if (res.success) {
-          setForecasts(res.data);
+          setMetrics(res.data);
         }
       }
     } catch (err) {
@@ -44,25 +42,10 @@ export default function ForecastingIntelligencePage() {
     }
   }
 
-  async function generateForecasts() {
-    try {
-      setLoading(true);
-      const ctx = await apiGet<any>('/api/context/current');
-      if (ctx.success && ctx.data.business) {
-        const bid = ctx.data.business.id;
-        await apiPost<any>('/api/forecasts/generate', {}, { headers: { 'x-business-id': bid } });
-        fetchForecasts();
-      }
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
-  }
-
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Forecasts...</div>;
+  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Forecasting Intelligence...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 pb-12">
       <nav className="border-b border-slate-800 bg-slate-900/50">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
@@ -81,48 +64,113 @@ export default function ForecastingIntelligencePage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <div className="flex justify-between items-center mb-8">
+      <main className="mx-auto max-w-6xl px-6 py-12">
+        <div className="flex items-center gap-3 mb-8">
+          <Activity className="h-8 w-8 text-blue-400" />
           <div>
-            <h1 className="text-2xl font-semibold text-white">Forecasting Intelligence</h1>
-            <p className="mt-1 text-slate-400">AI-driven predictive models for revenue, cashflow, and growth.</p>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Forecasting Intelligence</h1>
+            <p className="mt-1 text-slate-400">Real-time intelligence and execution telemetry.</p>
           </div>
-          <Button onClick={generateForecasts} className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Run Projection Model
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {forecasts.length === 0 ? (
-             <div className="col-span-full p-12 text-center border border-slate-800 rounded-xl bg-slate-900/50 text-slate-400">
-               No forecasts generated yet. Run the projection model to calculate future metrics.
-             </div>
-          ) : (
-            forecasts.map(f => (
-              <Card key={f.id} className="p-6 border-slate-800 bg-slate-900/50">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-semibold text-white capitalize">{f.metricType.toLowerCase().replace('_', ' ')}</h3>
-                  <TrendingUp className="h-5 w-5 text-blue-500" />
+        {!metrics ? (
+          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-12 text-center">
+            <h2 className="text-lg font-medium text-white">System Initializing</h2>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Module Health</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-white">{metrics.overview.healthScore}/100</h3>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-slate-400">Projected Value</p>
-                    <p className="text-2xl font-bold text-blue-400">{f.projectedValue}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-400">Target Date</p>
-                    <p className="text-white">{new Date(f.targetDate).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-500 border-t border-slate-800 pt-3">
-                    <span>Confidence: {f.confidenceScore}%</span>
-                    <span>Source: {f.modelSource}</span>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Active Signals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-blue-400">{metrics.overview.activeSignals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-blue-500/10 text-blue-400">
+                    <Zap className="h-4 w-4" />
                   </div>
                 </div>
               </Card>
-            ))
-          )}
-        </div>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Pending Actions</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-amber-400">{metrics.overview.pendingActions}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-amber-500/10 text-amber-400">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-slate-900/50 border-slate-800">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Associated Goals</p>
+                <div className="flex items-end gap-3">
+                  <h3 className="text-3xl font-bold text-purple-400">{metrics.overview.associatedGoals}</h3>
+                  <div className="p-1.5 rounded-lg mb-1 bg-purple-500/10 text-purple-400">
+                    <Target className="h-4 w-4" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Intelligence Signals</h2>
+                {metrics.recentSignals.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No active signals.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentSignals.map((sig: any) => (
+                      <Card key={sig.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-white">{sig.title}</h4>
+                          <span className="text-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded border bg-slate-800 text-slate-400 border-slate-700">
+                            {sig.type}
+                          </span>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-blue-400">
+                          {sig.impact} IMPACT
+                        </span>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4">Execution Actions</h2>
+                {metrics.recentActions.length === 0 ? (
+                  <Card className="p-6 bg-slate-900 border-slate-800 text-center">
+                    <p className="text-sm text-slate-400">No execution actions pending.</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {metrics.recentActions.map((act: any) => (
+                      <Card key={act.id} className="p-4 bg-slate-900 border-slate-800">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-slate-200">{act.title}</h4>
+                          <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            {act.status}
+                          </span>
+                        </div>
+                        <div className="text-xs mt-2 text-slate-500">
+                          Priority: {act.priority}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
