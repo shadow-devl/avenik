@@ -1,9 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { ContextService } from '../services/context.service.js';
 import { CapitalService } from '../services/finance/capital.service.js';
 import { ScenarioService } from '../services/finance/scenario.service.js';
+import { PredictiveFinanceService } from '../services/finance/predictive-finance.service.js';
 
 const router = Router();
 
@@ -27,7 +28,6 @@ const EquityScenarioSchema = z.object({
 
 /**
  * GET /api/finance/capital-gap
- * Returns the calculated capital gap
  */
 router.get(
   '/capital-gap',
@@ -47,7 +47,6 @@ router.get(
 
 /**
  * GET /api/finance/readiness
- * Returns the financial readiness scorecard
  */
 router.get(
   '/readiness',
@@ -67,7 +66,6 @@ router.get(
 
 /**
  * POST /api/finance/scenario/debt
- * Calculates EMI scenario for debt financing
  */
 router.post(
   '/scenario/debt',
@@ -87,7 +85,6 @@ router.post(
 
 /**
  * POST /api/finance/scenario/equity
- * Calculates equity dilution scenario for equity financing
  */
 router.post(
   '/scenario/equity',
@@ -103,6 +100,28 @@ router.post(
         currentFounderOwnershipPct
       );
       res.json({ status: 'success', data: scenario });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/finance/predict-runway
+ * Predicts cash runway and revenue trajectories using Gemini AI
+ */
+router.post(
+  '/predict-runway',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { businessId, horizonMonths } = req.body;
+      if (!businessId) {
+        return res.status(400).json({ error: 'businessId is required' });
+      }
+      await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+
+      const forecast = await PredictiveFinanceService.forecastRunway(businessId, horizonMonths || 12);
+      res.json({ success: true, data: forecast });
     } catch (error) {
       next(error);
     }
