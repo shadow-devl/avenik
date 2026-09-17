@@ -73,6 +73,12 @@ app.use(morgan('dev'));
 
 // ── Routes ───────────────────────────────────────
 import businessRouter from './routes/business.js';
+import { customerLifecycleOrchestrationRouter } from './routes/customer-lifecycle-orchestration.js';
+import { partnerRouter } from './routes/partner.js';
+import { productManagementRouter } from './routes/product-management.js';
+import { sustainabilityRouter } from './routes/sustainability.js';
+import { productionHubRouter } from './routes/production-hub.js';
+import { legalRouter } from './routes/legal.js';
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
@@ -120,6 +126,12 @@ app.use('/api/profile', requireAuth, profileRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 app.use('/api/webhooks', webhookRouter);
 app.use('/api/integrations', requireAuth, integrationsRouter);
+app.use('/api/customer-lifecycle-orchestration', requireAuth, customerLifecycleOrchestrationRouter);
+app.use('/api/partner', requireAuth, partnerRouter);
+app.use('/api/product-management', requireAuth, productManagementRouter);
+app.use('/api/sustainability', requireAuth, sustainabilityRouter);
+app.use('/api/production-hub', requireAuth, productionHubRouter);
+app.use('/api/legal', requireAuth, legalRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
