@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -169,7 +169,7 @@ export default function BusinessIntelligencePage() {
                         <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                           <div 
                             className="bg-blue-500 h-full" 
-                            style={{ width: ${Math.min(100, kpi.progress)}% }}
+                            style={{ width: `${Math.min(100, kpi.progress)}%` }}
                           />
                         </div>
                       </Card>

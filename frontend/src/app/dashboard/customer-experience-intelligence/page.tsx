@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -139,7 +139,7 @@ export default function CustomerExperiencePage() {
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className={${sig.type === 'RISK' ? 'text-rose-400' : 'text-emerald-400'} uppercase font-medium}>
+                          <span className={`${sig.type === 'RISK' ? 'text-rose-400' : 'text-emerald-400'}`}>
                             {sig.type}
                           </span>
                           <span className="text-slate-500">Confidence: {Math.round(sig.confidence * 100)}%</span>

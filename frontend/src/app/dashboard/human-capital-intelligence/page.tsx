@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
 import { apiGet } from '@/lib/api';
-import { Users, AlertCircle, Target, Briefcase } from "lucide-react";
+import { Users, AlertCircle, Target, Briefcase, Activity } from "lucide-react";
 
 export default function HumanCapitalIntelligencePage() {
   const { data: session, status } = useSession();
@@ -147,7 +147,7 @@ export default function HumanCapitalIntelligencePage() {
                         <div className="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden">
                           <div 
                             className={`h-full`} 
-                            style={{ width: ${Math.min(100, (cap.current / cap.required) * 100)}% }}
+                            style={{ width: `${Math.min(100, (cap.current / cap.required) * 100)}%` }}
                           />
                         </div>
                       </Card>

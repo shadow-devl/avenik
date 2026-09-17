@@ -10,7 +10,7 @@ import { apiGet, apiPost } from '@/lib/api';
 import { Activity, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 export default function FinancialIntelligencePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   
   const [readiness, setReadiness] = useState<any>(null);
