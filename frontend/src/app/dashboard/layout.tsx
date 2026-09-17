@@ -12,6 +12,7 @@ const SIDEBAR_NAV = [
   { name: 'Trust & Privacy', href: '/dashboard/avenik-trusted-intelligence', icon: ShieldCheck },
   { name: 'Unified Workspace', href: '/dashboard/unified-entrepreneur-intelligence-workspace', icon: CheckSquare },
   { name: 'Profile Roles', href: '/dashboard/settings/profile', icon: Users },
+  { name: 'Integrations', href: '/dashboard/settings/integrations', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
