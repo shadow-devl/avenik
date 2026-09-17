@@ -1,11 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Target, CheckCircle2, TrendingUp, ShieldAlert, Award } from 'lucide-react';
+import { 
+  Target, CheckCircle2, TrendingUp, ShieldAlert, Award, 
+  BrainCircuit, Factory, Globe2, Landmark, DollarSign,
+  HeartPulse, ShieldCheck, Users, Megaphone, Leaf, PackageSearch
+} from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api';
 import Link from 'next/link';
 
@@ -104,11 +108,44 @@ export default function DashboardPage() {
     );
   }
 
+  const aiModules = [
+    { title: "Financial Intelligence", desc: "Margin optimization & anomaly detection", icon: DollarSign, link: "/dashboard/financial-intelligence", color: "text-emerald-400" },
+    { title: "Revenue Operations", desc: "Pipeline velocity & leakage", icon: TrendingUp, link: "/dashboard/entrepreneur-revenue-operations", color: "text-emerald-400" },
+    { title: "Forecasting", desc: "3-Quarter predictive models", icon: TrendingUp, link: "/dashboard/forecasting-intelligence", color: "text-emerald-400" },
+    
+    { title: "Marketing Intelligence", desc: "Campaign generation & targeting", icon: Megaphone, link: "/dashboard/marketing-intelligence", color: "text-pink-400" },
+    { title: "Customer Experience", desc: "Friction analysis & loyalty plays", icon: HeartPulse, link: "/dashboard/customer-experience-intelligence", color: "text-pink-400" },
+    { title: "Customer Self-Service", desc: "Automation plays & AI FAQs", icon: BrainCircuit, link: "/dashboard/customer-self-service-portal", color: "text-pink-400" },
+
+    { title: "Product Management", desc: "Backlog prioritization & lifecycles", icon: PackageSearch, link: "/dashboard/product-management", color: "text-cyan-400" },
+    { title: "Ideation Engine", desc: "AI brainstorms based on segments", icon: BrainCircuit, link: "/dashboard/ideas", color: "text-amber-400" },
+    { title: "Intellectual Property", desc: "Patent strategy & monetization", icon: Award, link: "/dashboard/ip", color: "text-purple-400" },
+
+    { title: "Operations Hub", desc: "Workflow bottleneck detection", icon: Factory, link: "/dashboard/operations-intelligence", color: "text-blue-400" },
+    { title: "Advanced Supplier", desc: "Vendor optimization & risks", icon: Factory, link: "/dashboard/advanced-supplier", color: "text-blue-400" },
+    { title: "Sustainability", desc: "ESG posture & compliance", icon: Leaf, link: "/dashboard/sustainability", color: "text-emerald-500" },
+
+    { title: "Cybersecurity", desc: "Penetration score & threat vectors", icon: ShieldCheck, link: "/dashboard/cybersecurity", color: "text-red-400" },
+    { title: "Data Governance", desc: "Privacy & compliance readiness", icon: ShieldAlert, link: "/dashboard/data-governance", color: "text-teal-400" },
+    { title: "Legal & Compliance", desc: "Audit generation & risk analysis", icon: ShieldAlert, link: "/dashboard/legal", color: "text-red-500" },
+
+    { title: "Human Capital", desc: "Talent mapping & upskilling", icon: Users, link: "/dashboard/human-capital-intelligence", color: "text-indigo-400" },
+    { title: "Corporate University", desc: "AI curated learning tracks", icon: Award, link: "/dashboard/university", color: "text-indigo-400" },
+    { title: "Wellness & Retention", desc: "Burnout risk mitigation", icon: HeartPulse, link: "/dashboard/wellness", color: "text-indigo-400" },
+
+    { title: "Market Intelligence", desc: "Competitor mapping & threats", icon: Globe2, link: "/dashboard/market-intelligence", color: "text-sky-400" },
+    { title: "Internationalization", desc: "Global market entry strategies", icon: Globe2, link: "/dashboard/internationalization", color: "text-sky-400" },
+    { title: "Ecosystem Partnerships", desc: "Joint venture generation", icon: Users, link: "/dashboard/ecosystem-opportunity-execution", color: "text-fuchsia-400" },
+
+    { title: "Govt Support Portfolio", desc: "Match business to grants", icon: Landmark, link: "/dashboard/government-support-portfolio", color: "text-yellow-400" },
+    { title: "Scheme Success Rate", desc: "Draft application angles", icon: Target, link: "/dashboard/government-scheme-application-success", color: "text-yellow-400" }
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-12">
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {context.business.displayName}</h1>
-        <p className="text-slate-400">Your Unified Entrepreneur Intelligence Dashboard</p>
+        <p className="text-slate-400">Avenik Unified Entrepreneur Intelligence Platform</p>
       </div>
 
       {/* Top Metrics Row */}
@@ -139,25 +176,25 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {/* NBA and Goals */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-amber-500" />
-            Next Best Action <span className="text-[10px] bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded ml-1 uppercase font-normal">Calculated</span>
+            Next Best Action
           </h2>
           {nbas.length > 0 ? (
             nbas.map((action, i) => (
-              <Card key={i} className="p-5 border-amber-500/30">
+              <Card key={i} className="p-5 border-amber-500/30 bg-slate-900">
                 <h4 className="font-bold text-amber-400">{action.title}</h4>
                 <p className="text-sm text-slate-300 mt-2">{action.description}</p>
                 <div className="mt-4 flex gap-2">
-                  <span className="text-xs px-2 py-1 bg-slate-800 rounded-md text-slate-400">Source: {action.sourceAiModel}</span>
                   <span className="text-xs px-2 py-1 bg-slate-800 rounded-md text-slate-400">Confidence: {action.confidenceScore * 100}%</span>
                 </div>
               </Card>
             ))
           ) : (
-            <Card className="p-6 text-center text-slate-400">
+            <Card className="p-6 text-center text-slate-400 bg-slate-900">
               <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
               <p>You're all caught up! No urgent actions required.</p>
             </Card>
@@ -174,7 +211,7 @@ export default function DashboardPage() {
               Manage Goals
             </Link>
           </div>
-          <Card className="p-0 overflow-hidden">
+          <Card className="p-0 overflow-hidden bg-slate-900">
             <div className="divide-y divide-slate-800">
               {goals.length > 0 ? goals.map((goal, i) => (
                 <div key={i} className="p-5 hover:bg-slate-800/50 transition-colors">
@@ -194,6 +231,32 @@ export default function DashboardPage() {
               )}
             </div>
           </Card>
+        </div>
+      </div>
+
+      {/* Intelligence Modules Command Center */}
+      <div className="pt-8 border-t border-slate-800">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <BrainCircuit className="h-6 w-6 text-indigo-500" />
+            Intelligence Engine Command Center
+          </h2>
+          <p className="text-slate-400 mt-2">Access all 23+ live AI prediction and analysis modules mapped to your business context.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {aiModules.map((mod, i) => {
+            const Icon = mod.icon;
+            return (
+              <Link href={mod.link} key={i}>
+                <Card className="p-5 h-full bg-slate-900 border-slate-800 hover:border-slate-600 hover:bg-slate-800 transition-all group">
+                  <Icon className={`h-6 w-6 mb-3 ${mod.color} group-hover:scale-110 transition-transform`} />
+                  <h4 className="font-bold text-white text-sm mb-1">{mod.title}</h4>
+                  <p className="text-xs text-slate-400 leading-snug">{mod.desc}</p>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       </div>
     </div>
