@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -65,7 +65,7 @@ export default function FraudAndTrustPage() {
               <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Trust Score</p>
               <h3 className="text-3xl font-bold text-white mt-1">{normalizedScore}/100</h3>
             </div>
-            <div className={p-2 rounded-lg }>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
               <ShieldCheck className="h-5 w-5" />
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function FraudAndTrustPage() {
                     <h4 className="font-medium text-white">{claim.type}</h4>
                     <p className="text-xs text-slate-500">Date: {new Date(claim.createdAt).toLocaleDateString()}</p>
                   </div>
-                  <span className={	ext-xs px-2 py-1 rounded-full }>
+                  <span className="text-xs px-2 py-1 rounded-full">
                     {claim.status}
                   </span>
                 </Card>
@@ -137,7 +137,7 @@ export default function FraudAndTrustPage() {
                     <h4 className="font-medium text-white">{fcase.type}</h4>
                     <p className="text-sm text-slate-400">{fcase.details}</p>
                   </div>
-                  <span className={	ext-xs px-2 py-1 rounded-full }>
+                  <span className="text-xs px-2 py-1 rounded-full">
                     {fcase.severity}
                   </span>
                 </Card>

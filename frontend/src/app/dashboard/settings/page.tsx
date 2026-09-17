@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { useEffect, useState } from "react";
-import { apiPost, apiGet } from "@/lib/api";
+import { apiPost, apiGet, apiDelete } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { User, Building, Bell, Shield, Key } from "lucide-react";
 
@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
   const handleRemoveRole = async (roleId: string) => {
     try {
-      await apiPost(`/api/users/roles/${roleId}`, undefined, { method: 'DELETE' });
+      await apiDelete(`/api/users/roles/${roleId}`);
       fetchRoles();
     } catch (e) {
       console.error(e);
