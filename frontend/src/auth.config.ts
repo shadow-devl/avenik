@@ -1,6 +1,5 @@
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
-import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
 
 export default {
@@ -15,20 +14,7 @@ export default {
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET || "missing_ms_secret",
       issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER || "https://login.microsoftonline.com/common/v2.0",
     }),
-    Credentials({
-      name: "Development Login",
-      credentials: {
-        email: { label: "Email", type: "email", placeholder: "demo@avenik.com" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-        return {
-          id: "dev-user-id",
-          email: credentials.email as string,
-          name: "Demo Entrepreneur",
-        };
-      }
-    })
+    
   ],
   pages: {
     signIn: "/login",
