@@ -211,6 +211,7 @@ model Business {
   fundingRequests         FundingRequest[]
   verificationClaims      VerificationClaim[]
   fraudCases              FraudCase[]
+  externalIntegrations    ExternalIntegration[]
   healthRecords           BusinessHealth[]
   earlyWarnings           EarlyWarning[]
   forecasts               Forecast[]
@@ -1340,3 +1341,22 @@ model EconomicEngine {
 
   @@index([businessId])
 }
+model ExternalIntegration {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String   @map("business_id") @db.Uuid
+  provider       String   // 'STRIPE', 'PLAID', 'GOOGLE_ANALYTICS'
+  accessToken    String?  @map("access_token")
+  refreshToken   String?  @map("refresh_token")
+  externalId     String?  @map("external_id") // e.g., Stripe Account ID, Plaid Item ID
+  status         String   @default("ACTIVE") // 'ACTIVE', 'ERROR', 'DISCONNECTED'
+  lastSync       DateTime? @map("last_sync") @db.Timestamptz
+  metadata       Json?    // Store additional configuration
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, provider])
+  @@map("external_integrations")
+}
+

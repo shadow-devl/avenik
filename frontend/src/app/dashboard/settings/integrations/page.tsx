@@ -5,28 +5,85 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from '@/components/ui/Card';
-import { Activity, CreditCard, BarChart, Link2, CheckCircle2 } from "lucide-react";
+import { Activity, CreditCard, BarChart, Link2, Loader2, CheckCircle2 } from "lucide-react";
+import { apiGet, apiPost } from "@/lib/api";
 
 export default function IntegrationsSettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [integrations, setIntegrations] = useState<any[]>([]);
+  const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
+    } else if (status === "authenticated") {
+      fetchIntegrations();
     }
   }, [status, router]);
 
-  if (status === "loading" || loading) return <div className="p-8 text-slate-400">Loading Integrations...</div>;
+  async function fetchIntegrations() {
+    try {
+      // In a real flow, we'd pick the active business ID from a context provider
+      // For now, we fetch current context to get businessId
+      const ctx = await apiGet<any>('/api/context/current');
+      if (ctx.success && ctx.data.business) {
+        const bid = ctx.data.business.id;
+        const res = await apiGet<any>(/api/integrations?businessId=);
+        if (res.success) {
+          setIntegrations(res.data);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function toggleIntegration(provider: string, currentState: boolean) {
+    try {
+      setProcessing(provider);
+      const ctx = await apiGet<any>('/api/context/current');
+      if (ctx.success && ctx.data.business) {
+        const bid = ctx.data.business.id;
+        
+        // Toggle action
+        await apiPost<any>(/api/integrations/toggle?businessId=, {
+          provider,
+          active: !currentState
+        });
+        
+        await fetchIntegrations(); // refresh
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  function getStatus(provider: string) {
+    const intg = integrations.find(i => i.provider === provider);
+    return intg?.status === 'ACTIVE';
+  }
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 pb-12">
       <nav className="border-b border-slate-800 bg-slate-900/50">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
+            <Link href="/dashboard" className="text-xl font-bold tracking-tight text-white hover:text-blue-400 transition-colors">
               <span className="text-blue-400">A</span>venik
             </Link>
             <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">
@@ -53,12 +110,19 @@ export default function IntegrationsSettingsPage() {
                 <CreditCard className="w-6 h-6 text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Stripe</h2>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  Stripe
+                  {getStatus('STRIPE') && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                </h2>
                 <p className="text-sm text-slate-400">Sync payments, subscriptions, and MRR directly to Financial Intelligence.</p>
               </div>
             </div>
-            <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-              Connect Stripe
+            <button 
+              onClick={() => toggleIntegration('STRIPE', getStatus('STRIPE'))}
+              disabled={processing === 'STRIPE'}
+              className={px-4 py-2 rounded-lg font-medium transition-colors }
+            >
+              {processing === 'STRIPE' ? 'Working...' : (getStatus('STRIPE') ? 'Disconnect' : 'Connect Stripe')}
             </button>
           </Card>
 
@@ -68,12 +132,19 @@ export default function IntegrationsSettingsPage() {
                 <BarChart className="w-6 h-6 text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Google Analytics</h2>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  Google Analytics
+                  {getStatus('GOOGLE_ANALYTICS') && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                </h2>
                 <p className="text-sm text-slate-400">Feed live traffic and conversion data into Marketing Intelligence.</p>
               </div>
             </div>
-            <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-              Connect Analytics
+            <button 
+              onClick={() => toggleIntegration('GOOGLE_ANALYTICS', getStatus('GOOGLE_ANALYTICS'))}
+              disabled={processing === 'GOOGLE_ANALYTICS'}
+              className={px-4 py-2 rounded-lg font-medium transition-colors }
+            >
+              {processing === 'GOOGLE_ANALYTICS' ? 'Working...' : (getStatus('GOOGLE_ANALYTICS') ? 'Disconnect' : 'Connect Analytics')}
             </button>
           </Card>
 
@@ -83,12 +154,19 @@ export default function IntegrationsSettingsPage() {
                 <Activity className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Plaid</h2>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  Plaid
+                  {getStatus('PLAID') && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                </h2>
                 <p className="text-sm text-slate-400">Connect corporate bank accounts for automated cash runway forecasting.</p>
               </div>
             </div>
-            <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-              Connect Plaid
+            <button 
+              onClick={() => toggleIntegration('PLAID', getStatus('PLAID'))}
+              disabled={processing === 'PLAID'}
+              className={px-4 py-2 rounded-lg font-medium transition-colors }
+            >
+              {processing === 'PLAID' ? 'Working...' : (getStatus('PLAID') ? 'Disconnect' : 'Connect Plaid')}
             </button>
           </Card>
 

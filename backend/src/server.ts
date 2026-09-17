@@ -33,6 +33,8 @@ import { maturityRouter } from './routes/maturity.js';
 import { evolutionRouter } from './routes/evolution.js';
 import { customerIntelligenceRouter } from './routes/customer-intelligence.js';
 import { globalPlatformRouter } from './routes/global-platform.js';
+import { webhookRouter } from './routes/webhooks.js';
+import { integrationsRouter } from './routes/integrations.js';
 import { marketIntelligenceRouter } from './routes/market-intelligence.js';
 import { financialIntelligenceRouter } from './routes/financial-intelligence.js';
 import { workforceRouter } from './routes/workforce.js';
@@ -116,6 +118,8 @@ app.use('/api/generic-intelligence', requireAuth, genericIntelligenceRouter);
 app.use('/api/ai', requireAuth, aiRouter);
 app.use('/api/profile', requireAuth, profileRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
+app.use('/api/webhooks', webhookRouter);
+app.use('/api/integrations', requireAuth, integrationsRouter);
 
 // ── 404 Handler ──────────────────────────────────
 app.use((_req, _res, next) => {
