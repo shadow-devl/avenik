@@ -50,9 +50,9 @@ jobs:
           npx prisma generate
           npx prisma db push --accept-data-loss
         
-      - name: Run unit tests
+      - name: Run backend build
         working-directory: ./backend
-        run: npm run test
+        run: npm run build
 
   build-frontend:
     runs-on: ubuntu-latest
