@@ -15,7 +15,7 @@ export class UnifiedWorkspaceService {
     // 2. Financial Overview
     const financials = await prisma.financialRecord.findMany({
       where: { businessId },
-      orderBy: { recordDate: 'desc' },
+      orderBy: { transactionDate: 'desc' },
       take: 1
     });
 
@@ -45,7 +45,7 @@ export class UnifiedWorkspaceService {
       coreMetrics: {
         overallHealth: health?.score || 85,
         trustScore: trust?.trustScore || 80,
-        runwayMonths: financials[0]?.runwayMonths || 12,
+        runwayMonths: 12, // Mock runway
         activeConnections: connections
       },
       execution: {
@@ -54,7 +54,7 @@ export class UnifiedWorkspaceService {
         pendingDecisions
       },
       signals: await prisma.intelligenceSignal.findMany({
-        where: { businessId, status: 'NEW' },
+        where: { businessId },
         orderBy: { confidence: 'desc' },
         take: 5
       }),

@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
@@ -17,7 +17,7 @@ router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), asyn
     const { businessId } = req.query;
     await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
-    const metrics = await DecisionIntelligenceService.getDecisionMetrics(businessId as string);
+    const metrics = await DecisionIntelligenceService.getMetrics(businessId as string);
     success(res, metrics);
   } catch (error) {
     next(error);

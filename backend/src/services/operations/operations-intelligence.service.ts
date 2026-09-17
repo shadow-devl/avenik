@@ -25,8 +25,8 @@ export class OperationsIntelligenceService {
     let utilizedCapacity = 0;
 
     capacities.forEach(c => {
-      totalCapacity += c.availableHours;
-      utilizedCapacity += c.allocatedHours;
+      totalCapacity += c.requiredFTE;
+      utilizedCapacity += c.currentFTE;
     });
 
     const utilizationRate = totalCapacity > 0 ? Math.round((utilizedCapacity / totalCapacity) * 100) : 0;
@@ -41,8 +41,8 @@ export class OperationsIntelligenceService {
       },
       workforceStatus: capacities.map(c => ({
         id: c.id,
-        role: c.roleId,
-        utilization: c.availableHours > 0 ? Math.round((c.allocatedHours / c.availableHours) * 100) : 0
+        role: c.roleName,
+        utilization: c.requiredFTE > 0 ? Math.round((c.currentFTE / c.requiredFTE) * 100) : 0
       })),
       activeAlerts: signals.slice(0, 5).map(s => ({
         id: s.id,
