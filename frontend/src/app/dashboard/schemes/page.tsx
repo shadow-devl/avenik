@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
@@ -34,7 +34,7 @@ export default function AdvancedSchemesPage() {
             setBusinessId(bid);
             
             // Try fetching existing track 1 matches
-            const matchJson = await apiGet<any>(/api/opportunities/matches/, { headers: { 'x-business-id': bid } });
+            const matchJson = await apiGet<any>(`/api/opportunities/matches/$bid`, { headers: { 'x-business-id': bid } });
             if (matchJson.success) {
               setMatches(matchJson.data);
             }
@@ -155,7 +155,7 @@ export default function AdvancedSchemesPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-slate-400 mb-1">Eligibility Status</div>
-                  <div className={ont-bold flex items-center justify-end gap-2 }>
+                  <div className={`font-bold flex items-center justify-end gap-2 $((match.status === 'ELIGIBLE' ? 'text-emerald-400' : match.status === 'POTENTIAL' ? 'text-amber-400' : 'text-rose-400'))`}>
                     <CheckCircle2 className="h-4 w-4" />
                     {match.status}
                   </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -31,7 +31,7 @@ export default function IntegrationsSettingsPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/integrations?businessId=);
+        const res = await apiGet<any>(`/api/integrations?businessId=$bid`);
         if (res.success) {
           setIntegrations(res.data);
         }
@@ -51,7 +51,7 @@ export default function IntegrationsSettingsPage() {
         const bid = ctx.data.business.id;
         
         // Toggle action
-        await apiPost<any>(/api/integrations/toggle?businessId=, {
+        await apiPost<any>(`/api/integrations/toggle?businessId=$bid`, {
           provider,
           active: !currentState
         });
@@ -120,7 +120,7 @@ export default function IntegrationsSettingsPage() {
             <button 
               onClick={() => toggleIntegration('STRIPE', getStatus('STRIPE'))}
               disabled={processing === 'STRIPE'}
-              className={px-4 py-2 rounded-lg font-medium transition-colors }
+              className={`px-4 py-2 rounded-lg font-medium transition-colors $((getStatus(processing || 'STRIPE') ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20' : 'bg-slate-800 text-white hover:bg-slate-700'))`}
             >
               {processing === 'STRIPE' ? 'Working...' : (getStatus('STRIPE') ? 'Disconnect' : 'Connect Stripe')}
             </button>
@@ -142,7 +142,7 @@ export default function IntegrationsSettingsPage() {
             <button 
               onClick={() => toggleIntegration('GOOGLE_ANALYTICS', getStatus('GOOGLE_ANALYTICS'))}
               disabled={processing === 'GOOGLE_ANALYTICS'}
-              className={px-4 py-2 rounded-lg font-medium transition-colors }
+              className={`px-4 py-2 rounded-lg font-medium transition-colors $((getStatus(processing || 'STRIPE') ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20' : 'bg-slate-800 text-white hover:bg-slate-700'))`}
             >
               {processing === 'GOOGLE_ANALYTICS' ? 'Working...' : (getStatus('GOOGLE_ANALYTICS') ? 'Disconnect' : 'Connect Analytics')}
             </button>
@@ -164,7 +164,7 @@ export default function IntegrationsSettingsPage() {
             <button 
               onClick={() => toggleIntegration('PLAID', getStatus('PLAID'))}
               disabled={processing === 'PLAID'}
-              className={px-4 py-2 rounded-lg font-medium transition-colors }
+              className={`px-4 py-2 rounded-lg font-medium transition-colors $((getStatus(processing || 'STRIPE') ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20' : 'bg-slate-800 text-white hover:bg-slate-700'))`}
             >
               {processing === 'PLAID' ? 'Working...' : (getStatus('PLAID') ? 'Disconnect' : 'Connect Plaid')}
             </button>
