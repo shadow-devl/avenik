@@ -1,19 +1,23 @@
-import { Router } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
+import { SupportPortfolioService } from '../services/government/support-portfolio.service.js';
 
 const router = Router();
 
-// GET /api/government-support-portfolio
-router.get('/', requireAuth, async (req, res, next) => {
-  try {
-    res.json({
-      success: true,
-      message: 'Government Support Portfolio module loaded successfully',
-      moduleId: '1.74'
-    });
-  } catch (error) {
-    next(error);
-  }
+router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  res.json({ success: true, message: 'Gov Portfolio module loaded' });
 });
 
+router.post('/analyze', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { businessId } = req.body;
+    if (!businessId) return res.status(400).json({ error: 'businessId required' });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+    const data = await SupportPortfolioService.analyze(businessId);
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
+});
+
+export const supportPortfolioRouter = router;
 export default router;
