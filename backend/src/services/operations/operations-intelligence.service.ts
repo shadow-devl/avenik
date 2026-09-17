@@ -1,4 +1,4 @@
-﻿import { prisma } from '../../db.js';
+import { prisma } from '../../db.js';
 
 export class OperationsIntelligenceService {
   static async getMetrics(businessId: string) {
@@ -8,7 +8,7 @@ export class OperationsIntelligenceService {
       take: 20
     });
 
-    const pendingActions = await prisma.businessAction.findMany({
+    const pendingActions = await prisma.action.findMany({
       where: { businessId, status: { not: 'COMPLETED' } },
       orderBy: { createdAt: 'desc' },
       take: 10
@@ -27,7 +27,7 @@ export class OperationsIntelligenceService {
         severity: r.severity,
         date: r.createdAt
       })),
-      bottlenecks: pendingActions.map(a => ({
+      bottlenecks: pendingActions.map((a: any) => ({
         id: a.id,
         title: a.title,
         status: a.status

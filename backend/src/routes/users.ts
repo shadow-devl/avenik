@@ -85,7 +85,7 @@ router.post('/roles', requireAuth, async (req, res, next) => {
 // DELETE /api/users/roles/:roleId
 router.delete('/roles/:roleId', requireAuth, async (req, res, next) => {
   try {
-    const { roleId } = req.params;
+    const roleId = req.params.roleId as string;
     await prisma.userRole.delete({
       where: { userId_roleId: { userId: req.user!.userId, roleId } }
     });
