@@ -1,19 +1,27 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { ContextService } from '../services/context.service.js';
+import { ResourceIntelligenceService } from '../services/resources/resource-intelligence.service.js';
+import { success } from '../utils/response.js';
 
 const router = Router();
 
-// GET /api/resource-intelligence
-router.get('/', requireAuth, async (req, res, next) => {
+const businessQuerySchema = z.object({
+  businessId: z.string().uuid(),
+});
+
+router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      message: 'Resource Intelligence module loaded successfully',
-      moduleId: '1.88'
-    });
+    const { businessId } = req.query;
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
+
+    const metrics = await ResourceIntelligenceService.getMetrics(businessId as string);
+    success(res, metrics);
   } catch (error) {
     next(error);
   }
 });
 
-export default router;
+export const resourceIntelligenceRouter = router;
