@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
+import { config } from '../src/config/index.js';
 import { PrismaClient } from '@prisma/client';
 import app from '../src/server.js';
 
@@ -7,6 +9,7 @@ const prisma = new PrismaClient();
 let userId: string;
 let businessId: string;
 let orgId: string;
+let token: string;
 
 describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   beforeAll(async () => {
@@ -19,6 +22,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
       },
     });
     userId = user.id;
+    token = jwt.sign({ userId, email: user.email, roles: ['ENTREPRENEUR'] }, config.jwtSecret);
 
     // Create test org
     const org = await prisma.organization.create({
@@ -85,6 +89,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   it('12.1 Syncs and retrieves entrepreneur digital twin', async () => {
     const syncRes = await request(app)
       .post('/api/maturity/digital-twin/sync')
+      .set('Authorization', `Bearer ${token}`)
       .send({ userId, businessId });
 
     expect(syncRes.status).toBe(200);
@@ -94,7 +99,8 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
     expect(syncRes.body.data.activeWorkContext).toBeDefined();
 
     const getRes = await request(app)
-      .get(`/api/maturity/digital-twin?userId=${userId}&businessId=${businessId}`);
+      .get(`/api/maturity/digital-twin?userId=${userId}&businessId=${businessId}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(getRes.status).toBe(200);
     expect(getRes.body.data.id).toBe(syncRes.body.data.id);
@@ -103,6 +109,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   it('12.1 Updates entrepreneur preferences', async () => {
     const res = await request(app)
       .put('/api/maturity/digital-twin/preferences')
+      .set('Authorization', `Bearer ${token}`)
       .send({ userId, businessId, preferences: { theme: 'dark', language: 'en' } });
 
     expect(res.status).toBe(200);
@@ -114,6 +121,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   it('12.2 Detects financial anomalies with prescriptions', async () => {
     const res = await request(app)
       .post(`/api/maturity/anomalies/detect?businessId=${businessId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send();
 
     expect(res.status).toBe(200);
@@ -128,11 +136,13 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
 
   it('12.2 Updates anomaly status to INVESTIGATING', async () => {
     const anomalies = await request(app)
-      .get(`/api/maturity/anomalies?businessId=${businessId}`);
+      .get(`/api/maturity/anomalies?businessId=${businessId}`)
+      .set('Authorization', `Bearer ${token}`);
 
     const anomalyId = anomalies.body.data[0].id;
     const res = await request(app)
       .patch('/api/maturity/anomalies')
+      .set('Authorization', `Bearer ${token}`)
       .send({ id: anomalyId, status: 'INVESTIGATING', rootCause: 'New enterprise deal' });
 
     expect(res.status).toBe(200);
@@ -145,6 +155,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   it('12.7 Creates and tracks innovation records', async () => {
     const createRes = await request(app)
       .post('/api/maturity/innovation')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         businessId,
         type: 'EXPERIMENT',
@@ -160,6 +171,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
     // Create an IP record too
     await request(app)
       .post('/api/maturity/innovation')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         businessId,
         type: 'PATENT',
@@ -168,7 +180,8 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
       });
 
     const summaryRes = await request(app)
-      .get(`/api/maturity/innovation/summary?businessId=${businessId}`);
+      .get(`/api/maturity/innovation/summary?businessId=${businessId}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(summaryRes.status).toBe(200);
     expect(summaryRes.body.data.total).toBe(2);
@@ -182,6 +195,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
     // Create policies
     await request(app)
       .post('/api/maturity/governance/policy')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         businessId, domain: 'AI', policyName: 'AI Output Review',
         description: 'All AI-generated outputs must be human-reviewed before becoming authoritative',
@@ -191,6 +205,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
 
     await request(app)
       .post('/api/maturity/governance/policy')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         businessId, domain: 'SECURITY', policyName: 'Tenant Isolation',
         description: 'All data access must be scoped to the authenticated tenant',
@@ -200,7 +215,8 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
 
     // Run audit
     const auditRes = await request(app)
-      .get(`/api/maturity/governance/audit?businessId=${businessId}`);
+      .get(`/api/maturity/governance/audit?businessId=${businessId}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(auditRes.status).toBe(200);
     expect(auditRes.body.data.totalPolicies).toBe(2);
@@ -212,6 +228,7 @@ describe('Global Intelligent Entrepreneurial Platform Maturity', () => {
   it('12.8 Evaluates agent governance constraints', async () => {
     const res = await request(app)
       .post('/api/maturity/governance/agent-eval')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         businessId,
         agentName: 'financial-agent',

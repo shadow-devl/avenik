@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
+import { config } from '../src/config/index.js';
 import { PrismaClient } from '@prisma/client';
 import app from '../src/server.js';
 
@@ -7,6 +9,7 @@ const prisma = new PrismaClient();
 let userId: string;
 let businessId: string;
 let orgId: string;
+let token: string;
 
 describe('Global Ecosystem & Intelligence Platform', () => {
   beforeAll(async () => {
@@ -14,6 +17,7 @@ describe('Global Ecosystem & Intelligence Platform', () => {
       data: { name: 'Scale Tester', email: `scale-${Date.now()}@test.com`, status: 'ACTIVE' },
     });
     userId = user.id;
+    token = jwt.sign({ userId, email: user.email, roles: ['ENTREPRENEUR'] }, config.jwtSecret);
 
     const org = await prisma.organization.create({
       data: { name: 'Scale Test Org', status: 'ACTIVE' },
@@ -37,7 +41,8 @@ describe('Global Ecosystem & Intelligence Platform', () => {
   });
 
   it('Registers Global Ecosystem Networks (Phases 14-33 concept)', async () => {
-    const res = await request(app).post('/api/global/network').send({
+    const res = await request(app).post('/api/global/network')
+      .set('Authorization', `Bearer ${token}`).send({
       businessId, networkType: 'SUPPLY_CHAIN_HUB', region: 'APAC'
     });
     expect(res.status).toBe(200);
@@ -45,7 +50,8 @@ describe('Global Ecosystem & Intelligence Platform', () => {
   });
 
   it('Deploys Intelligence Nodes (Phases 14-33 concept)', async () => {
-    const res = await request(app).post('/api/global/nodes').send({
+    const res = await request(app).post('/api/global/nodes')
+      .set('Authorization', `Bearer ${token}`).send({
       businessId, nodeRole: 'SUPPLY_CHAIN_OPTIMIZER', autonomyLevel: 4
     });
     expect(res.status).toBe(200);
@@ -54,7 +60,8 @@ describe('Global Ecosystem & Intelligence Platform', () => {
   });
 
   it('Runs Economic Simulations (Phases 14-33 concept)', async () => {
-    const res = await request(app).post('/api/global/economics/simulate').send({
+    const res = await request(app).post('/api/global/economics/simulate')
+      .set('Authorization', `Bearer ${token}`).send({
       businessId, scenarioName: 'High Inflation Shock', macroFactors: { inflation: 0.08, interestRate: 0.07 }
     });
     expect(res.status).toBe(200);
