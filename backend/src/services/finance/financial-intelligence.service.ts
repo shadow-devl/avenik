@@ -1,63 +1,53 @@
 ﻿import { prisma } from '../../db.js';
+import { ai } from '../../lib/gemini.js';
 
 export class FinancialIntelligenceService {
-  static async getMetrics(businessId: string) {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
+  static async analyze(businessId: string) {
+    const inflows = await prisma.financialRecord.findMany({ where: { businessId, type: 'INFLOW' }, take: 10 });
+    const outflows = await prisma.financialRecord.findMany({ where: { businessId, type: 'OUTFLOW' }, take: 10 });
 
-    // 1. Fetch real-time transactions
-    const records = await prisma.financialRecord.findMany({
-      where: { businessId },
-      orderBy: { transactionDate: 'desc' }
+    const totalInflow = inflows.reduce((acc, r) => acc + r.amount, 0);
+    const totalOutflow = outflows.reduce((acc, r) => acc + r.amount, 0);
+
+    const context = JSON.stringify({
+      inflowVolume: totalInflow,
+      outflowVolume: totalOutflow,
+      revenueStreams: inflows.map(i => i.category)
     });
 
-    let totalRevenue = 0;
-    let totalExpenses = 0;
-    let currentCashFlow = 0;
-    
-    // Aggregations
-    records.forEach(r => {
-      if (r.type === 'INFLOW' && r.category === 'REVENUE') totalRevenue += r.amount;
-      if (r.type === 'OUTFLOW' && r.category === 'EXPENSE') totalExpenses += r.amount;
-      currentCashFlow += (r.type === 'INFLOW' ? r.amount : -r.amount);
+    const prompt = `
+You are AVENIK's Financial Intelligence AI.
+Analyze the raw financial volume and revenue streams.
+Generate a comprehensive financial health and margin optimization report.
+
+Context:
+${context}
+
+Respond EXACTLY with a JSON object in this format:
+{
+  "summary": "2-3 sentences summarizing financial health.",
+  "financialHealthScore": number (0-100),
+  "marginOptimizations": [
+    {
+      "area": "Where to cut costs or raise prices",
+      "strategy": "Specific financial tactic",
+      "impact": "Expected margin expansion"
+    }
+  ],
+  "anomaliesDetected": [
+    {
+      "description": "Potential financial risk or unusual pattern",
+      "severity": "HIGH" | "MEDIUM" | "LOW"
+    }
+  ]
+}
+`.trim();
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json", temperature: 0.2 }
     });
-
-    const monthlyBurn = totalExpenses > 0 ? (totalExpenses / 12) : 5000; // Mock fallback if little data
-    const runwayMonths = currentCashFlow > 0 ? (currentCashFlow / monthlyBurn) : 0;
-
-    // 2. Fetch AI Forecasts
-    const forecasts = await prisma.forecast.findMany({
-      where: { businessId },
-      orderBy: { periodStart: 'asc' }
-    });
-
-    return {
-      overview: {
-        totalRevenue,
-        totalExpenses,
-        currentCashFlow,
-        monthlyBurnRate: monthlyBurn,
-        estimatedRunwayMonths: Math.round(runwayMonths * 10) / 10
-      },
-      recentTransactions: records.slice(0, 10).map(r => ({
-        id: r.id,
-        type: r.type,
-        category: r.category,
-        amount: r.amount,
-        currency: r.currency,
-        date: r.transactionDate,
-        status: r.status
-      })),
-      forecasts: forecasts.map(f => ({
-        id: f.id,
-        metric: f.metricName,
-        period: f.periodStart,
-        predictedValue: f.predictedValue,
-        confidenceLower: f.confidenceLower,
-        confidenceUpper: f.confidenceUpper,
-        assumptions: f.assumptions
-      }))
-    };
+    return JSON.parse(response.text!);
   }
 }

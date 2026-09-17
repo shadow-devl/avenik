@@ -1,27 +1,23 @@
-﻿import { Router } from 'express';
-import { z } from 'zod';
-import { validate } from '../middleware/validate.js';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { ContextService } from '../services/context.service.js';
-import { MarketingIntelligenceService } from '../services/marketing/marketing-intelligence.service.js';
-import { success } from '../utils/response.js';
+import { MarketingIntelligenceService } from '../services/growth/marketing-intelligence.service.js';
 
 const router = Router();
 
-const businessQuerySchema = z.object({
-  businessId: z.string().uuid(),
+router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  res.json({ success: true, message: 'Marketing Intelligence module loaded' });
 });
 
-router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), async (req, res, next) => {
+router.post('/analyze', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { businessId } = req.query;
-    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
-
-    const metrics = await MarketingIntelligenceService.getMetrics(businessId as string);
-    success(res, metrics);
-  } catch (error) {
-    next(error);
-  }
+    const { businessId } = req.body;
+    if (!businessId) return res.status(400).json({ error: 'businessId required' });
+    await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId });
+    const data = await MarketingIntelligenceService.analyze(businessId);
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
 });
 
 export const marketingIntelligenceRouter = router;
+export default router;
