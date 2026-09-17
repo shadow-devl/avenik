@@ -30,7 +30,7 @@ export default function OperationsIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/operations-intelligence/metrics?businessId=);
+        const res = await apiGet<any>(`/api/operations-intelligence/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -84,7 +84,7 @@ export default function OperationsIntelligencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Capacity Utilization</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.overview.utilizationRate}%</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Activity className="h-4 w-4" />
                   </div>
                 </div>
@@ -135,7 +135,7 @@ export default function OperationsIntelligencePage() {
                             BLOCKED
                           </span>
                         </div>
-                        <span className={	ext-[10px] uppercase font-bold }>
+                        <span className={`ext-[10px] uppercase font-bold`}>
                           {btn.priority} PRIORITY
                         </span>
                       </Card>
@@ -156,7 +156,7 @@ export default function OperationsIntelligencePage() {
                       <Card key={alt.id} className="p-4 bg-slate-900 border-slate-800">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold text-slate-200">{alt.title}</h4>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded`}>
                             {alt.type}
                           </span>
                         </div>

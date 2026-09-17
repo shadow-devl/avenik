@@ -30,7 +30,7 @@ export default function SchemeSuccessPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/scheme-success/metrics?businessId=);
+        const res = await apiGet<any>(`/api/scheme-success/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -85,7 +85,7 @@ export default function SchemeSuccessPage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Success Rate</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.successRate}%</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <TrendingUp className="h-4 w-4" />
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export default function SchemeSuccessPage() {
                             <p className="text-xs text-slate-400 mt-1">Match: {Math.round(app.confidence * 100)}%</p>
                           )}
                         </div>
-                        <span className={	ext-xs px-3 py-1.5 rounded-full font-medium }>
+                        <span className={`ext-xs px-3 py-1.5 rounded-full font-medium`}>
                           {app.status}
                         </span>
                       </div>

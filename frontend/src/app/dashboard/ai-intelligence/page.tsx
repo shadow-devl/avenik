@@ -36,7 +36,7 @@ export default function AiIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/generic-intelligence/metrics?businessId=&domain=ai-intelligence);
+        const res = await apiGet<any>(`/api/generic-intelligence/metrics?businessId=${bid}&domain=ai-intelligence`);
         if (res.success) {
           setMetrics({ ...res.data, businessId: bid });
         }
@@ -171,8 +171,8 @@ export default function AiIntelligencePage() {
               )}
               
               {chatHistory.map((msg, idx) => (
-                <div key={idx} className={lex }>
-                  <div className={max-w-[80%] rounded-2xl p-4 }>
+                <div key={idx} className={`lex`}>
+                  <div className={`max-w-[80%] rounded-2xl p-4`}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                   </div>
                 </div>

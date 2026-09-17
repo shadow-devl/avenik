@@ -30,7 +30,7 @@ export default function DecisionIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/decision-intelligence/metrics?businessId=);
+        const res = await apiGet<any>(`/api/decision-intelligence/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -156,7 +156,7 @@ export default function DecisionIntelligencePage() {
                       <Card key={dec.id} className="p-4 bg-slate-900 border-slate-800">
                         <div className="flex justify-between items-center mb-2">
                           <h4 className="font-medium text-slate-200">{dec.title}</h4>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded-full }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded-full`}>
                             {dec.status}
                           </span>
                         </div>

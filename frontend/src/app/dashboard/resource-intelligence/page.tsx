@@ -30,7 +30,7 @@ export default function ResourceIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/resource-intelligence/metrics?businessId=);
+        const res = await apiGet<any>(`/api/resource-intelligence/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -84,7 +84,7 @@ export default function ResourceIntelligencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Macro Resilience</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.overview.macroResilience}%</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <TrendingUp className="h-4 w-4" />
                   </div>
                 </div>
@@ -134,13 +134,13 @@ export default function ResourceIntelligencePage() {
                       <Card key={sup.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
                         <div>
                           <h4 className="font-semibold text-white">{sup.name}</h4>
-                          <span className={	ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full }>
+                          <span className={`ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full`}>
                             {sup.status}
                           </span>
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-slate-400">Health Score</p>
-                          <p className={ont-bold }>
+                          <p className={`ont-bold`}>
                             {sup.health || 'N/A'}/100
                           </p>
                         </div>
@@ -162,7 +162,7 @@ export default function ResourceIntelligencePage() {
                       <Card key={scen.id} className="p-4 bg-slate-900 border-slate-800">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium text-slate-200">{scen.name}</h4>
-                          <span className={	ext-xs px-2 py-1 rounded }>
+                          <span className={`ext-xs px-2 py-1 rounded`}>
                             Resilience: {scen.resilience}%
                           </span>
                         </div>

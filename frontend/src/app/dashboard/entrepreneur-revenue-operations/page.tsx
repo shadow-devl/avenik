@@ -30,7 +30,7 @@ export default function RevenueOperationsPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/revenue-operations/metrics?businessId=);
+        const res = await apiGet<any>(`/api/revenue-operations/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -134,7 +134,7 @@ export default function RevenueOperationsPage() {
                       <Card key={deal.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
                         <div>
                           <h4 className="font-semibold text-white">{deal.title}</h4>
-                          <span className={	ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full }>
+                          <span className={`ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full`}>
                             {deal.status}
                           </span>
                         </div>

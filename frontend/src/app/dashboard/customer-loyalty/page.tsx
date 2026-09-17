@@ -30,7 +30,7 @@ export default function CustomerLoyaltyPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/customer/loyalty?businessId=);
+        const res = await apiGet<any>(`/api/customer/loyalty?businessId=${bid}`);
         if (res.success) {
           setLoyalty(res.data);
         }
@@ -84,7 +84,7 @@ export default function CustomerLoyaltyPage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Loyalty Score</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{loyalty.loyaltyScore}/100</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Heart className="h-4 w-4" />
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function CustomerLoyaltyPage() {
                           <h4 className="font-semibold text-white">{seg.name}</h4>
                           <p className="text-xs text-slate-500 mt-1">Size: {seg.size?.toLocaleString() || 'Unknown'}</p>
                         </div>
-                        <span className={	ext-xs px-2 py-1 rounded-full font-medium }>
+                        <span className={`ext-xs px-2 py-1 rounded-full font-medium`}>
                           {seg.readiness} Readiness
                         </span>
                       </Card>
@@ -155,7 +155,7 @@ export default function CustomerLoyaltyPage() {
                   <div className="space-y-3">
                     {loyalty.signals.map((sig: any) => (
                       <Card key={sig.id} className="p-4 bg-slate-900 border-slate-800 flex gap-4 items-start">
-                        <div className={p-2 rounded-lg mt-1 }>
+                        <div className={`p-2 rounded-lg mt-1`}>
                           {sig.type === 'RISK' || sig.type === 'DETERIORATION' ? <AlertCircle className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
                         </div>
                         <div>

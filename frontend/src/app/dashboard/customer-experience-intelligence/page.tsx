@@ -30,7 +30,7 @@ export default function CustomerExperiencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/customer-experience/metrics?businessId=);
+        const res = await apiGet<any>(`/api/customer-experience/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -84,7 +84,7 @@ export default function CustomerExperiencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Average NPS</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.overview.averageNps}</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Smile className="h-4 w-4" />
                   </div>
                 </div>
@@ -131,10 +131,10 @@ export default function CustomerExperiencePage() {
                 ) : (
                   <div className="space-y-3">
                     {metrics.cxSignals.map((sig: any) => (
-                      <Card key={sig.id} className={p-4 bg-slate-900 border }>
+                      <Card key={sig.id} className={`p-4 bg-slate-900 border`}>
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium text-white">{sig.title}</h4>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded`}>
                             {sig.impact} Impact
                           </span>
                         </div>
@@ -166,7 +166,7 @@ export default function CustomerExperiencePage() {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-slate-400 mb-1">NPS Score</p>
-                          <span className={ont-bold }>
+                          <span className={`ont-bold`}>
                             {seg.nps != null ? seg.nps : 'N/A'}
                           </span>
                         </div>

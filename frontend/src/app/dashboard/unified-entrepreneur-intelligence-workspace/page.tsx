@@ -30,7 +30,7 @@ export default function UnifiedWorkspacePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/unified-workspace/overview?businessId=);
+        const res = await apiGet<any>(`/api/unified-workspace/overview?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -92,7 +92,7 @@ export default function UnifiedWorkspacePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Business Health</p>
                 <div className="flex items-end justify-between">
                   <h3 className="text-4xl font-bold text-white">{metrics.coreMetrics.overallHealth}<span className="text-lg text-slate-500">/100</span></h3>
-                  <Activity className={h-6 w-6 } />
+                  <Activity className={`h-6 w-6`} />
                 </div>
               </Card>
 

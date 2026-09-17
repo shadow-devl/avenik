@@ -30,7 +30,7 @@ export default function AdvancedSupportExecutionPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/advanced-government-support/metrics?businessId=);
+        const res = await apiGet<any>(`/api/advanced-government-support/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -136,7 +136,7 @@ export default function AdvancedSupportExecutionPage() {
                       <Card key={opp.id} className="p-4 bg-slate-900 border-slate-800 flex justify-between items-center">
                         <div>
                           <h4 className="font-semibold text-white">{opp.title}</h4>
-                          <span className={	ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full }>
+                          <span className={`ext-[10px] uppercase mt-1 inline-block px-2 py-0.5 rounded-full`}>
                             {opp.status}
                           </span>
                         </div>
@@ -159,13 +159,13 @@ export default function AdvancedSupportExecutionPage() {
                 ) : (
                   <div className="space-y-3">
                     {metrics.executionTasks.map((task: any) => (
-                      <Card key={task.id} className={p-4 bg-slate-900 border }>
+                      <Card key={task.id} className={`p-4 bg-slate-900 border`}>
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             {task.overdue && <AlertCircle className="w-4 h-4 text-rose-400" />}
                             <h4 className="font-medium text-slate-200">{task.title}</h4>
                           </div>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded`}>
                             {task.priority}
                           </span>
                         </div>

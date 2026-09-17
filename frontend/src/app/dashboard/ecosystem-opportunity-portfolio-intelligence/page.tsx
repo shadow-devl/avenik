@@ -30,7 +30,7 @@ export default function EcosystemPortfolioPage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/ecosystem/portfolio/metrics?businessId=);
+        const res = await apiGet<any>(`/api/ecosystem/portfolio/metrics?businessId=${bid}`);
         if (res.success) {
           setPortfolio(res.data);
         }
@@ -84,7 +84,7 @@ export default function EcosystemPortfolioPage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Network Health</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{portfolio.overview.averageNetworkHealth}/100</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Activity className="h-4 w-4" />
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default function EcosystemPortfolioPage() {
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end">
-                          <span className={	ext-xs px-2 py-1 rounded-full font-medium }>
+                          <span className={`ext-xs px-2 py-1 rounded-full font-medium`}>
                             {rel.status}
                           </span>
                           {rel.health && (
@@ -171,7 +171,7 @@ export default function EcosystemPortfolioPage() {
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t border-slate-800/50 flex justify-between">
-                          <span className={	ext-xs px-2 py-0.5 rounded }>
+                          <span className={`ext-xs px-2 py-0.5 rounded`}>
                             {net.status}
                           </span>
                         </div>

@@ -30,7 +30,7 @@ export default function BusinessIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/business-intelligence/metrics?businessId=);
+        const res = await apiGet<any>(`/api/business-intelligence/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -84,7 +84,7 @@ export default function BusinessIntelligencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Overall Health</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.overview.overallHealthScore}/100</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Activity className="h-4 w-4" />
                   </div>
                 </div>
@@ -134,7 +134,7 @@ export default function BusinessIntelligencePage() {
                       <Card key={goal.id} className="p-4 bg-slate-900 border-slate-800">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold text-white">{goal.title}</h4>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded-full }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded-full`}>
                             {goal.status}
                           </span>
                         </div>

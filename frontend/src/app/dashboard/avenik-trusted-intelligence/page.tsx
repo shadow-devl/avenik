@@ -30,7 +30,7 @@ export default function TrustedIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/trusted-intelligence/metrics?businessId=);
+        const res = await apiGet<any>(`/api/trusted-intelligence/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -84,7 +84,7 @@ export default function TrustedIntelligencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Network Trust Score</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.overview.trustScore}/100</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export default function TrustedIntelligencePage() {
                             <p className="text-xs text-slate-500 mt-0.5">Updated: {new Date(claim.updatedAt).toLocaleDateString()}</p>
                           </div>
                         </div>
-                        <span className={	ext-[10px] uppercase px-2 py-0.5 rounded-full }>
+                        <span className={`ext-[10px] uppercase px-2 py-0.5 rounded-full`}>
                           {claim.status}
                         </span>
                       </Card>
@@ -161,7 +161,7 @@ export default function TrustedIntelligencePage() {
                       <Card key={fraud.id} className="p-4 bg-slate-900 border-rose-500/20">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold text-rose-200">{fraud.type.replace(/_/g, ' ')}</h4>
-                          <span className={	ext-[10px] uppercase px-2 py-0.5 rounded border }>
+                          <span className={`ext-[10px] uppercase px-2 py-0.5 rounded border`}>
                             {fraud.severity}
                           </span>
                         </div>

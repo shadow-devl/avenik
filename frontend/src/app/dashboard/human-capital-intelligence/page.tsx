@@ -30,7 +30,7 @@ export default function HumanCapitalIntelligencePage() {
       const ctx = await apiGet<any>('/api/context/current');
       if (ctx.success && ctx.data.business) {
         const bid = ctx.data.business.id;
-        const res = await apiGet<any>(/api/workforce/metrics?businessId=);
+        const res = await apiGet<any>(`/api/workforce/metrics?businessId=${bid}`);
         if (res.success) {
           setMetrics(res.data);
         }
@@ -85,7 +85,7 @@ export default function HumanCapitalIntelligencePage() {
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Workforce Health</p>
                 <div className="flex items-end gap-3">
                   <h3 className="text-3xl font-bold text-white">{metrics.workforceHealth}%</h3>
-                  <div className={p-1.5 rounded-lg mb-1 }>
+                  <div className={`p-1.5 rounded-lg mb-1`}>
                     <Activity className="h-4 w-4" />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export default function HumanCapitalIntelligencePage() {
                         </div>
                         <div className="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden">
                           <div 
-                            className={h-full } 
+                            className={`h-full`} 
                             style={{ width: ${Math.min(100, (cap.current / cap.required) * 100)}% }}
                           />
                         </div>
