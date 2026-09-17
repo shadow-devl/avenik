@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { ContextService } from '../services/context.service.js';
-import { BusinessIntelligenceService } from '../services/business/business-intelligence.service.js';
+import { DecisionIntelligenceService } from '../services/decisions/decision-intelligence.service.js';
 import { success } from '../utils/response.js';
 
 const router = Router();
@@ -17,11 +17,11 @@ router.get('/metrics', requireAuth, validate(businessQuerySchema, 'query'), asyn
     const { businessId } = req.query;
     await ContextService.resolve({ userId: req.user!.userId, requestedBusinessId: businessId as string });
 
-    const metrics = await BusinessIntelligenceService.getMetrics(businessId as string);
+    const metrics = await DecisionIntelligenceService.getDecisionMetrics(businessId as string);
     success(res, metrics);
   } catch (error) {
     next(error);
   }
 });
 
-export const businessIntelligenceRouter = router;
+export const decisionIntelligenceRouter = router;

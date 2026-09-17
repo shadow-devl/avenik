@@ -38,6 +38,9 @@ import { marketIntelligenceRouter } from './routes/market-intelligence.js';
 import { financialIntelligenceRouter } from './routes/financial-intelligence.js';
 import { workforceRouter } from './routes/workforce.js';
 import { schemeSuccessRouter } from './routes/scheme-success.js';
+import { decisionIntelligenceRouter } from './routes/decision-intelligence.js';
+import { marketingIntelligenceRouter } from './routes/marketing-intelligence.js';
+import { businessIntelligenceRouter } from './routes/business-intelligence.js';
 
 const app = express();
 
@@ -90,6 +93,9 @@ app.use('/api/market', requireAuth, marketIntelligenceRouter);
 app.use('/api/financial-intelligence', requireAuth, financialIntelligenceRouter);
 app.use('/api/workforce', requireAuth, workforceRouter);
 app.use('/api/scheme-success', requireAuth, schemeSuccessRouter);
+app.use('/api/decision-intelligence', requireAuth, decisionIntelligenceRouter);
+app.use('/api/marketing-intelligence', requireAuth, marketingIntelligenceRouter);
+app.use('/api/business-intelligence', requireAuth, businessIntelligenceRouter);
 app.use('/api/global', requireAuth, globalPlatformRouter);
 
 // ── 404 Handler ──────────────────────────────────
