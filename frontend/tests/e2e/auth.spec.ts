@@ -4,15 +4,16 @@ test.describe('Authentication Flows', () => {
   test('should render the login page correctly', async ({ page }) => {
     await page.goto('/login');
     
-    // Check if the form renders
-    await expect(page.locator('form')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Sign in/i })).toBeVisible();
+    // Check if the page title/header renders
+    await expect(page.locator('h1')).toContainText('Sign in');
     
-    // Check inputs
-    const emailInput = page.locator('input[type="email"]');
-    const passwordInput = page.locator('input[type="password"]');
+    // Check OAuth buttons
+    const googleButton = page.getByRole('button', { name: /Sign in with Google/i });
+    const microsoftButton = page.getByRole('button', { name: /Sign in with Microsoft/i });
+    const demoButton = page.getByRole('button', { name: /Sign in as Demo Entrepreneur/i });
     
-    await expect(emailInput).toBeVisible();
-    await expect(passwordInput).toBeVisible();
+    await expect(googleButton).toBeVisible();
+    await expect(microsoftButton).toBeVisible();
+    await expect(demoButton).toBeVisible();
   });
 });
